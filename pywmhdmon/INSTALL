@@ -4,5 +4,5 @@
 2. Copy pywmhdmon.py to somewhere in your path (like ~/bin or
    /usr/local/bin).
 
-3. Copy the sample.pywmhdmon to ~/.pywmhdmon and edit as you like.
+3. Copy the sample.pywmhdmonrc to ~/.pywmhdmonrc and edit as you like.
 

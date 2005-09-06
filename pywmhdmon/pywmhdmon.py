@@ -11,6 +11,16 @@ Licensed under the GNU General Public License.
 
 
 Changes
+2004-07-15 Kristoffer Erlandsson
+Added a patch from Mario Frasca (Thanks!) which prevents the app from showing
+the data from the host file system if there is no filesystem mounted at the
+given point.
+
+2003-09-01 Kristoffer Erlandsson
+Fixed a bug where the numbers wouldn't show if they were between 1000 and 1024.
+
+2003-06-25 Kristoffer Erlandsson
+Fixed a bug where a mouse click caused the app to enter an infinite loop
 
 2003-06-24 Kristoffer Erlandsson
 Additional fine tuning
@@ -71,8 +81,11 @@ digits = '0123456789:/-%. '
 defaultConfigFile = '~/.pywmhdmonrc'
 defaultRGBFiles = ('/usr/lib/X11/rgb.txt', '/usr/X11R6/lib/X11/rgb.txt')
 defaultProcStat = '/proc/stat'
-displayModes = ('bar', 'percent', 'free')
+displayModes = ('bar', 'percent', 'free', 'used')
 defaultMode = 'bar'
+
+class NotMounted(OSError):
+    pass
 
 class PywmHDMon:
     def __init__(self, pathsToMonitor, procStat='/proc/stat', actMonEnabled=1):
@@ -97,10 +110,20 @@ class PywmHDMon:
         '''Get the free and total space of the filesystem which path is on.
 
         Return a tuple with (<total space>, <free space>) in bytes. Raise
-        OSError if we can't stat the path.
+        OSError if we can't stat the path.  Raise NotMounted if not mounted.
         These operations are quite costly, not adviced to perform these checks
         more than once every 10 seconds.
         '''
+        # check if is mounted <- st_dev(/mount/point) == st_dev(/mount)
+        if path is not '/':
+            statOwn = os.stat(path)
+
+            # the following is a bit ugly: it removes the trailing
+            # dirname from the mount point.  split by '/', leave the
+            # last string, join back, check for empty string.
+            statCnt = os.stat('/'.join(path.split('/')[:-1]) or '/')
+            if statOwn[2] == statCnt[2]:
+                raise NotMounted
         stat = os.statvfs(path)
         blockSize = stat.f_bsize
         availableBlocks = stat.f_bavail
@@ -133,13 +156,19 @@ class PywmHDMon:
     def paintHdData(self, line, data, mode):
         total, free = data
         xStart = width - xOffset - 6 * letterWidth - 1
-        if mode == 'percent':
+        if total==0:
+            self.addString('-----', xStart, self.getY(line))
+            pass
+        elif mode == 'percent':
             percent = (float(free) / float(total)) * 100.0
             percentStr = (str(int(round(percent))) + '%').rjust(5)
             self.addString(percentStr, xStart, self.getY(line))
         elif mode == 'free':
             freeStr = bytesToStr(free).rjust(5)
             self.addString(freeStr, xStart, self.getY(line))
+        elif mode == 'used':
+            totalStr = bytesToStr(total).rjust(5)
+            self.addString(totalStr, xStart, self.getY(line))
         elif mode == 'bar':
             percentUsed = (float(total - free) / float(total)) * 100.0
             self.paintGraph(percentUsed, xStart, self.getY(line) + 2, 
@@ -201,6 +230,7 @@ class PywmHDMon:
         while not event is None:
             if event['type'] == 'destroynotify':
                 sys.exit(0)
+            event = pywmhelpers.getEvent()
 
     def mainLoop(self):
         counter = -1
@@ -217,6 +247,8 @@ class PywmHDMon:
                         self.paintLabel(index + 1, label)
                         try:
                             hdData = self.getHdInfo(path)
+                        except NotMounted:
+                            hdData = (0, 0)
                         except OSError, e:
                             sys.stderr.write(
                             "Can't get hd data from %s: %s\n" % (path, str(e)))
@@ -316,19 +348,36 @@ def bytesToStr(bytes):
     gb = 1024 * mb
     tb = 1024 * gb
     pb = 1024 * tb
-    numDigits = 3
     if bytes < kb:
-        return makeNumDigits(bytes, numDigits) + 'B'
+        size = bytes
+        letter = 'B'
+        #return makeNumDigits(bytes, numDigits) + 'B'
     elif bytes < mb:
-        return makeNumDigits(bytes/kb, numDigits) + 'k'
+        size = bytes / kb
+        letter = 'k'
+        #return makeNumDigits(bytes/kb, numDigits) + 'k'
     elif bytes < gb:
-        return makeNumDigits(bytes/mb, numDigits) + 'M'
+        size = bytes / mb
+        letter = 'M'
+        #return makeNumDigits(bytes/mb, numDigits) + 'M'
     elif bytes < tb:
-        return makeNumDigits(bytes/gb, numDigits) + 'G'
+        size = bytes / gb
+        letter = 'G'
+        #return makeNumDigits(bytes/gb, numDigits) + 'G'
     elif bytes < pb:
-        return makeNumDigits(bytes/tb, numDigits) + 'T'
+        size = bytes / tb
+        letter = 'T'
+        #return makeNumDigits(bytes/tb, numDigits) + 'T'
     else:
-        return makeNumDigits(bytes/pb, numDigits) + 'P'
+        size = bytes / pb
+        letter = 'p'
+        #return makeNumDigits(bytes/pb, numDigits) + 'P'
+    if size >= 1000:
+        res = makeNumDigits(size, 4)
+    else:
+        res = makeNumDigits(size, 3)
+    res += letter
+    return res
 
 
 def main():

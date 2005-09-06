@@ -1,0 +1,26 @@
+[DEFAULT]
+# Displaymodes are free, percent or bar, displays the free size, free percent
+# and a bar representing space, respectively.
+1.label=/
+1.path=/
+1.displaymode=free
+
+2.label=c
+2.path=/mnt/c
+2.displaymode=free
+
+3.label=d
+3.path=/mnt/d
+3.displaymode=free
+
+4.label=e
+4.path=/mnt/e
+4.displaymode=free
+
+textcolor=light sea green
+background=black
+barfgcolor=light sea green
+barbgcolor=grey45
+
+#rgbfile=/usr/lib/X11/rgb.txt
+
