@@ -1,0 +1,16 @@
+[WHAT]
+pywmhdmon is a WindowMaker dockapp that displays the available space on
+up to four of your filesystems. It also contains a bar showing the
+current HD activity. It currently only works on system which has a
+/proc/stat like file. The application is easy to configure, invoke it
+with --help or see the sample rc-file for more information.
+
+[WHY]
+As usual, I didn't find a dockapp that fitted me. And I really like to
+see the current disk activity since my disks are so quiet that I can't
+hear when they work.
+
+[CONTACT]
+Mail anything related to this program to me, Kristoffer Erlandsson,
+<krier115@student.liu.se>
+

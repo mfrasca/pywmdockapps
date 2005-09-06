@@ -1,0 +1,8 @@
+2003-07-02 Kristoffer Erlandsson
+    * Added support for up to 10 mouse buttons.
+    * The char translation now handles both upper and lower case.
+
+2003-06-29 Kristoffer Erlandsson
+    * Additional error checking around string interpolations from cfg file.
+
+

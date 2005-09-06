@@ -1,0 +1,10 @@
+1. Edit setup.py and make XLibDir point to the directory containing the
+   X shared libraries and make XIncludes point to the directory
+   containing your X includes.
+
+2. Su root.
+
+3. run './setup.py install'
+
+Now the library should be built and installed as an Python extension module.
+

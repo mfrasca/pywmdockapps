@@ -1,0 +1,8 @@
+1. If you don't have pywmgeneral installed, install it first. Can be found
+   at http://www.cyd.liu.se/~krier115/pywm/
+
+2. Copy pywmseti.py to somewhere in your path (like ~/bin or
+   /usr/local/bin).
+
+3. Copy the sample.pywmseti to ~/.pywmseti and edit as you like.
+
