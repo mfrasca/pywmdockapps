@@ -1,26 +1,50 @@
 [DEFAULT]
-# Displaymodes are free, percent or bar, displays the free size, free percent
-# and a bar representing space, respectively.
+
+# Displaymodes are used, free, percent or bar, displays the used size,
+# free size, free percent and a bar representing space, respectively.
+
 1.label=/
 1.path=/
-1.displaymode=free
+#1.displaymode=free
 
-2.label=c
-2.path=/mnt/c
-2.displaymode=free
+2.label=usr
+2.path=/usr
+#2.displaymode=free
 
-3.label=d
-3.path=/mnt/d
-3.displaymode=free
+3.label=home
+3.path=/home
+#3.displaymode=free
 
-4.label=e
-4.path=/mnt/e
-4.displaymode=free
+4.label=cd
+4.path=/mnt/cd
+4.displaymode=used
+4.action=['/home/mario/bin/tmount', '/mnt/cd', 'eject']
+
+5.label=jr
+5.path=/mnt/jr
+5.displaymode=used
+5.action=['/home/mario/bin/tmount', '/mnt/jr', 'eject']
+
+6.label=sm
+6.path=/mnt/sm
+6.displaymode=free
+6.action=['/home/mario/bin/tmount', '/mnt/sm']
+
+7.label=cf
+7.path=/mnt/cf
+7.displaymode=free
+7.action=['/home/mario/bin/tmount', '/mnt/cf']
+
+8.label=flo
+8.path=/mnt/flo
+8.displaymode=free
+8.action=['/home/mario/bin/tmount', '/mnt/flo']
 
 textcolor=light sea green
 background=black
 barfgcolor=light sea green
 barbgcolor=grey45
+monitoring=0
 
 #rgbfile=/usr/lib/X11/rgb.txt
 

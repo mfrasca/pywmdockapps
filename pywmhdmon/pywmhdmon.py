@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-'''pywmhdmon.py
+"""pywmhdmon.py
 
 WindowMaker dockapp to monitor the free space on your partitions and
 the disk activity.
@@ -11,10 +11,17 @@ Licensed under the GNU General Public License.
 
 
 Changes
-2004-07-15 Kristoffer Erlandsson
-Added a patch from Mario Frasca (Thanks!) which prevents the app from showing
-the data from the host file system if there is no filesystem mounted at the
-given point.
+
+2005-09-02 Mario Frasca
+  added -s option for skipping an amount of configuration items.
+  changed some single quotes to double quotes for use in emacs.
+  updated the rc sample file 
+
+2004-07-16 Mario Frasca
+  recognizes unmounted partitions.
+  configurable mouse actions.
+  'used' information for read-only media.
+  recognizes #-started numerical-coded colors.
 
 2003-09-01 Kristoffer Erlandsson
 Fixed a bug where the numbers wouldn't show if they were between 1000 and 1024.
@@ -28,7 +35,8 @@ Additional fine tuning
 2003-06-23 Kristoffer Erlandsson
 First working version
 
-'''
+"""
+
 usage = '''pywmhdmon.py [options]
 Available options are:
 -h, --help                      print this help
@@ -39,8 +47,8 @@ Available options are:
 -r, --rgbfile <file>            set the rgb file to get color codes from
 -c, --configfile <file>         set the config file to use
 -p, --procstat <file>           set the location of /proc/stat
+-s, --skipconf <num>            determines how many configuration items to skip
 '''
-
 
 import sys
 import time
@@ -78,19 +86,22 @@ graphLineStartY = 58
 letters = 'abcdefghijklmnopqrstuvwxyz'
 digits = '0123456789:/-%. '
 
-defaultConfigFile = '~/.pywmhdmonrc'
+defaultConfigFile = os.environ['HOME']+'/.pywmhdmonrc'
 defaultRGBFiles = ('/usr/lib/X11/rgb.txt', '/usr/X11R6/lib/X11/rgb.txt')
 defaultProcStat = '/proc/stat'
 displayModes = ('bar', 'percent', 'free', 'used')
 defaultMode = 'bar'
 
+hdmon = None
+
 class NotMounted(OSError):
     pass
 
 class PywmHDMon:
-    def __init__(self, pathsToMonitor, procStat='/proc/stat', actMonEnabled=1):
+    def __init__(self, pathsToMonitor, procStat='/proc/stat', actMonEnabled=1, skipping=0):
         self._pathsToMonitor = pathsToMonitor
         self._actMonEnabled = actMonEnabled
+        self._skipping = skipping
 
         self._statFile = procStat
         self._maxIODiff = 0
@@ -107,13 +118,14 @@ class PywmHDMon:
             sys.exit(3)
 
     def getHdInfo(self, path):
-        '''Get the free and total space of the filesystem which path is on.
+        """Get the free and total space of the filesystem which path is on.
 
         Return a tuple with (<total space>, <free space>) in bytes. Raise
         OSError if we can't stat the path.  Raise NotMounted if not mounted.
         These operations are quite costly, not adviced to perform these checks
         more than once every 10 seconds.
-        '''
+        """
+        
         # check if is mounted <- st_dev(/mount/point) == st_dev(/mount)
         if path is not '/':
             statOwn = os.stat(path)
@@ -132,19 +144,20 @@ class PywmHDMon:
         total = blockSize * totalBlocks
         return (total, free)
 
-    def paintGraph(self, percentFilled, x, y, w):
+    def paintGraph(self, percentFilled, x, y, w, thin=None):
         '''Paint a graph with percentFilled percent filled.
 
-        Paint at position x, y and with width w.
+        Paint at position x, y and with width w.  
+        if thin == 1, make it a thin line instead of a block.
         '''
         paintWidth = int(round(percentFilled/100.0 * w))
         if paintWidth > 0:
             pywmhelpers.copyXPMArea(
-                graphLineStartX, graphLineStartY, paintWidth, graphHeight,
+                graphLineStartX, graphLineStartY, paintWidth, thin or graphHeight,
                 x + xOffset, y + yOffset)
         if w - paintWidth > 0:
             pywmhelpers.copyXPMArea(
-                graphBgStartX, graphBgStartY, w - paintWidth, graphHeight,
+                graphBgStartX, graphBgStartY, w - paintWidth, thin or graphHeight,
                 x + paintWidth + xOffset, y + yOffset)
 
     def getY(self, line):
@@ -157,18 +170,21 @@ class PywmHDMon:
         total, free = data
         xStart = width - xOffset - 6 * letterWidth - 1
         if total==0:
-            self.addString('-----', xStart, self.getY(line))
+            self.addString('     ', xStart, self.getY(line))
+            self.paintGraph(0, xStart, self.getY(line) + 4, 
+                            width - xOffset*2 - xStart - 2,
+                            thin=1)
             pass
         elif mode == 'percent':
             percent = (float(free) / float(total)) * 100.0
             percentStr = (str(int(round(percent))) + '%').rjust(5)
             self.addString(percentStr, xStart, self.getY(line))
-        elif mode == 'free':
-            freeStr = bytesToStr(free).rjust(5)
-            self.addString(freeStr, xStart, self.getY(line))
         elif mode == 'used':
             totalStr = bytesToStr(total).rjust(5)
             self.addString(totalStr, xStart, self.getY(line))
+        elif mode == 'free':
+            freeStr = bytesToStr(free).rjust(5)
+            self.addString(freeStr, xStart, self.getY(line))
         elif mode == 'bar':
             percentUsed = (float(total - free) / float(total)) * 100.0
             self.paintGraph(percentUsed, xStart, self.getY(line) + 2, 
@@ -177,7 +193,7 @@ class PywmHDMon:
             sys.stderr.write('Unknown display mode: %s, ignoring data.\n'
                               % mode)
     def getHdActivity(self):
-        '''Return the current hd activity in percent.
+        """Return the current hd activity in percent.
         
         Return how many percent of the max achieved activity during the
         program's lifetime the current activity is. However, every time
@@ -185,7 +201,8 @@ class PywmHDMon:
         little bit to get a bit less affected by spikes. I think the
         interesting thing is to see if the hard drive is active, not
         really exactly how active.
-        '''
+        """
+        
         statFile = file(self._statFile, 'r')
         diskIoStartTag = 'disk_io: '
         ioLine = None
@@ -227,47 +244,60 @@ class PywmHDMon:
 
     def _checkEvents(self):
         event = pywmhelpers.getEvent()
-        while not event is None:
+        while event is not None:
             if event['type'] == 'destroynotify':
                 sys.exit(0)
+            elif event['type'] == 'buttonrelease':
+                area = pywmhelpers.checkMouseRegion(event['x'],event['y'])
+                if area is not -1:
+                    action = self._pathsToMonitor[area-1+self._skipping][3]
+                    if action:
+                        os.spawnvp(os.P_NOWAIT, action[0], action)
             event = pywmhelpers.getEvent()
 
+    def updateMonitoredPaths(self):
+        index = 0
+        pageoffset = self._skipping
+        for i in self._pathsToMonitor:
+            index += 1
+            if index < pageoffset+1:
+                continue
+            if i is not None:
+                label, path, mode, action = i
+                self.paintLabel(index-pageoffset, label)
+                try:
+                    hdData = self.getHdInfo(path)
+                except NotMounted:
+                    hdData = (0, 0)
+                except OSError, e:
+                    sys.stderr.write(
+                    "Can't get hd data from %s: %s\n" % (path, str(e)))
+                    hdData = (0, 0)
+                self.paintHdData(index-pageoffset, hdData, mode)
+            if index - pageoffset == 5:
+                break
+
     def mainLoop(self):
-        counter = -1
+        self.updateMonitoredPaths()
         while 1:
-            counter += 1
             self._checkEvents()
             if self._actMonEnabled:
                 self.updateHdActivity()
-            if counter % 100 == 0:
-                index = 0
-                for i in self._pathsToMonitor:
-                    if not i is None:
-                        label, path, mode = i
-                        self.paintLabel(index + 1, label)
-                        try:
-                            hdData = self.getHdInfo(path)
-                        except NotMounted:
-                            hdData = (0, 0)
-                        except OSError, e:
-                            sys.stderr.write(
-                            "Can't get hd data from %s: %s\n" % (path, str(e)))
-                            hdData = (0, 0)
-                        self.paintHdData(index + 1, hdData, mode)
-                    index += 1
-            if counter == 9999999:
-                counter = -1
             pywmhelpers.redraw()
             time.sleep(0.1)
 
 
-
+import signal
+def handler(num, frame):
+    hdmon.updateMonitoredPaths()
+    signal.alarm(10)
 
 def parseCommandLine(argv):
     '''Parse the commandline. Return a dictionary with options and values.'''
-    shorts = 'ht:f:g:b:r:c:p:'
+    shorts = 'ht:f:g:b:r:c:p:s:'
     longs = ['help', 'textcolor=', 'background=', 'barfgcolor=',
-             'rgbfile=', 'configfile=', 'barbgcolor=', 'procstat=']
+             'rgbfile=', 'configfile=', 'barbgcolor=', 'procstat=',
+             'skipconf=']
     try:
         opts, nonOptArgs = getopt.getopt(argv[1:], shorts, longs)
     except getopt.GetoptError, e:
@@ -293,6 +323,8 @@ def parseCommandLine(argv):
             d['barfgcolor'] = a
         if o in ('-p', '--procstat'):
             d['procstat'] = a
+        if o in ('-s', '--skipconf'):
+            d['skipconf'] = a
     return d
 
 def parseColors(defaultRGBFileList, config, xpm):
@@ -318,7 +350,8 @@ def parseColors(defaultRGBFileList, config, xpm):
         for key, value in colors:
             col = config.get(key)
             if not col is None:
-                code = pywmhelpers.getColorCode(col, rgbFileName)
+                if col[0] is '#': code=col
+                else: code = pywmhelpers.getColorCode(col, rgbFileName)
                 if code is None:
                     sys.stderr.write('Bad colorcode for %s, ignoring.\n' % key)
                 else:
@@ -338,10 +371,10 @@ def makeNumDigits(num, numDigits):
     return s
 
 def bytesToStr(bytes):
-    '''Convert a number of bytes to a nice printable string.
+    """Convert a number of bytes to a nice printable string.
     
     May raise ValueError if bytes can't be seen as an float.
-    '''
+    """
     bytes = float(bytes)
     kb = 1024 
     mb = 1024 * 1024
@@ -391,23 +424,28 @@ def main():
     parseColors(defaultRGBFiles, config, xpm)
 
     pathsToMonitor = []
-    for i in range(1,5):
+    for i in range(1,1000):
         labelStr = str(i) + '.label'
         pathStr = str(i) + '.path'
         modeStr = str(i) + '.displaymode'
+        actionStr = str(i) + '.action'
         label = config.get(labelStr)
+        if not label: break
         path = config.get(pathStr)
+        action = config.get(actionStr)
+        if action: action=eval(action)
         displayMode = config.get(modeStr, defaultMode)
         if not displayMode in displayModes:
             sys.stderr.write(
                 'Unknown display mode: %s, using default.\n' % displayMode)
             displayMode = defaultMode
-        if label is None or path is None:
-            pathsToMonitor.append(None)
-        else:
-            pathsToMonitor.append((label[:3], path, displayMode))
+        pathsToMonitor.append((label[:3], path, displayMode, action))
+        pywmhelpers.addMouseRegion(i,
+                                   8, 8 + (i - 1) * (letterHeight + 3),
+                                   58, 4 + i * (letterHeight + 3))
     procStat = config.get('procstat', defaultProcStat)
-    actMonEnabled = 1
+    skipping = int(config.get('skipconf', 0))
+    actMonEnabled = int(config.get('monitoring'))
     if not os.access(procStat, os.R_OK):
         sys.stderr.write(
             "Can't read your procstat file, try setting it with -p. ")
@@ -420,8 +458,13 @@ def main():
     sys.argv[0] = programName
     pywmhelpers.setDefaultPixmap(xpm)
     pywmhelpers.openXwindow(sys.argv, width, height)
-    # XXX Add commands for clicking different areas?
-    hdmon = PywmHDMon(pathsToMonitor, procStat, actMonEnabled)
+
+    signal.signal(signal.SIGCHLD, handler)
+    signal.signal(signal.SIGALRM, handler)
+    signal.alarm(10)
+
+    global hdmon
+    hdmon = PywmHDMon(pathsToMonitor, procStat, actMonEnabled, skipping)
     hdmon.mainLoop()
 
 
@@ -544,4 +587,3 @@ xpm = \
 
 if __name__ == '__main__':
     main()
-
