@@ -10,12 +10,21 @@ Licensed under the GNU General Public License.
 
 
 Changes:
+2003-09-01 Kristoffer Erlandsson
+Fixed a bug where the week didn't update if we used %q style week numbering.
+
+2003-06-28 Kristoffer Erlandsson
+Fixed a bug where a mouse click caused an infinite loop
+
+2003-06-26 Kristoffer Erlandsson
+Fixed bug when longer strings didn't get cleared when shorter ones where
+painted. Now only repaint the strings when they have changed.
+
 2003-06-24 Kristoffer Erlandsson
 Added event handling for graceful shutdown
 
 2003-06-16 Kristoffer Erlandsson
 First workingish version
-
 '''
 usage = '''pywmdatetime.py [options]
 Available options are:
@@ -78,6 +87,11 @@ def addString(s, x, y):
         sys.stderr.write('Error when painting string:\n' + str(e) + '\n')
         sys.exit(3)
 
+def clearLine(y):
+    '''Clear a line of text at position y.'''
+    pywmhelpers.copyXPMArea(73, yOffset, width - 2 * xOffset, letterHeight,
+                            xOffset, y + yOffset)
+
 def getCenterStartPos(s):
     return pywmhelpers.getCenterStartPos(s, letterWidth, width, xOffset)
 
@@ -137,10 +151,12 @@ def checkForEvents():
     while not event is None:
         if event['type'] == 'destroynotify':
             sys.exit(0)
+        event = pywmhelpers.getEvent()
 
 def mainLoop(timeFmt, dateFmt, dayFmt, weekFmt):
     recalcWeek = weekFmt.find('%q') + 1  # True if we found %q.
     counter = -1
+    lastStrs = [''] * 4
     while 1:
         counter += 1
         checkForEvents()
@@ -149,7 +165,10 @@ def mainLoop(timeFmt, dateFmt, dayFmt, weekFmt):
         margin = 3
         spacing = getVertSpacing(4, margin)
         timeX = getCenterStartPos(timeStr)
-        addString(timeStr, timeX, margin)
+        if lastStrs[0] != timeStr:
+            clearLine(margin) 
+            addString(timeStr, timeX, margin)
+        lastStrs[0] = timeStr
         if counter % 100 == 0:
             # We only perform the date/week checks/updates once every 100th
             # iteration. We will maybe lag behind a couple of seconds when
@@ -158,17 +177,26 @@ def mainLoop(timeFmt, dateFmt, dayFmt, weekFmt):
             dateStr = time.strftime(dateFmt, lt)[:maxCharsPerLine]
             if recalcWeek:
                 week = calculateWeek(lt)
-                weekFmt = weekFmt.replace('%q', str(week))
-            weekStr = time.strftime(weekFmt, lt)[:maxCharsPerLine]
+                newWeekFmt = weekFmt.replace('%q', str(week))
+            weekStr = time.strftime(newWeekFmt, lt)[:maxCharsPerLine]
             dayStr = time.strftime(dayFmt, lt)[:maxCharsPerLine]
-        
             dateX = getCenterStartPos(dateStr)
             weekX = getCenterStartPos(weekStr)
             dayX = getCenterStartPos(dayStr)
-            addString(dateStr, dateX, margin + spacing + letterWidth)
-            addString(dayStr, dayX, margin + 2 * (spacing + letterWidth))
-            addString(weekStr, weekX, margin + 3 * (spacing + letterWidth))
-            counter = 0
+            if lastStrs[1] != dateStr:
+                clearLine(margin + spacing + letterWidth)
+                addString(dateStr, dateX, margin + spacing + letterWidth)
+            lastStrs[1] = dateStr
+            if lastStrs[2] != dayStr:
+                clearLine(margin + 2 * (spacing + letterWidth))
+                addString(dayStr, dayX, margin + 2 * (spacing + letterWidth))
+            lastStrs[2] = dayStr
+            if lastStrs[3] != weekStr:
+                clearLine(margin + 3 * (spacing + letterWidth))
+                addString(weekStr, weekX, margin + 3 * (spacing + letterWidth))
+            lastStrs[3] = weekStr
+        if counter == 999999:
+            counter = -1
         pywmhelpers.redraw()
         time.sleep(0.1)
 
@@ -244,14 +272,14 @@ xpm = \
  '                                                                ..///...........................................................................................',
  '                                                                ..///...........................................................................................',
  '                                                                ..///...........................................................................................',
- '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX    ..///...........................................................................................',
- '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX    ..///...........................................................................................',
- '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX    ..///...........................................................................................',
- '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX    ..///...........................................................................................',
- '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX    ..///...........................................................................................',
- '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX    ..///...........................................................................................',
- '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX    ..///...........................................................................................',
- '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX    ..///...........................................................................................',
+ '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX    ..///....XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX...............................',
+ '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX    ..///....XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX...............................',
+ '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX    ..///....XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX...............................',
+ '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX    ..///....XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX...............................',
+ '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX    ..///....XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX...............................',
+ '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX    ..///....XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX...............................',
+ '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX    ..///....XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX...............................',
+ '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX    ..///....XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX...............................',
  '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX    ..///...........................................................................................',
  '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX    ..///...........................................................................................',
  '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX    ..///...........................................................................................',
