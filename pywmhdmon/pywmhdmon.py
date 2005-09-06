@@ -11,11 +11,6 @@ Licensed under the GNU General Public License.
 
 
 Changes
-2003-09-01 Kristoffer Erlandsson
-Fixed a bug where the numbers wouldn't show if they were between 1000 and 1024.
-
-2003-06-25 Kristoffer Erlandsson
-Fixed a bug where a mouse click caused the app to enter an infinite loop
 
 2003-06-24 Kristoffer Erlandsson
 Additional fine tuning
@@ -206,7 +201,6 @@ class PywmHDMon:
         while not event is None:
             if event['type'] == 'destroynotify':
                 sys.exit(0)
-            event = pywmhelpers.getEvent()
 
     def mainLoop(self):
         counter = -1
@@ -322,36 +316,19 @@ def bytesToStr(bytes):
     gb = 1024 * mb
     tb = 1024 * gb
     pb = 1024 * tb
+    numDigits = 3
     if bytes < kb:
-        size = bytes
-        letter = 'B'
-        #return makeNumDigits(bytes, numDigits) + 'B'
+        return makeNumDigits(bytes, numDigits) + 'B'
     elif bytes < mb:
-        size = bytes / kb
-        letter = 'k'
-        #return makeNumDigits(bytes/kb, numDigits) + 'k'
+        return makeNumDigits(bytes/kb, numDigits) + 'k'
     elif bytes < gb:
-        size = bytes / mb
-        letter = 'M'
-        #return makeNumDigits(bytes/mb, numDigits) + 'M'
+        return makeNumDigits(bytes/mb, numDigits) + 'M'
     elif bytes < tb:
-        size = bytes / gb
-        letter = 'G'
-        #return makeNumDigits(bytes/gb, numDigits) + 'G'
+        return makeNumDigits(bytes/gb, numDigits) + 'G'
     elif bytes < pb:
-        size = bytes / tb
-        letter = 'T'
-        #return makeNumDigits(bytes/tb, numDigits) + 'T'
+        return makeNumDigits(bytes/tb, numDigits) + 'T'
     else:
-        size = bytes / pb
-        letter = 'p'
-        #return makeNumDigits(bytes/pb, numDigits) + 'P'
-    if size >= 1000:
-        res = makeNumDigits(size, 4)
-    else:
-        res = makeNumDigits(size, 3)
-    res += letter
-    return res
+        return makeNumDigits(bytes/pb, numDigits) + 'P'
 
 
 def main():
