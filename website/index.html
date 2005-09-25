@@ -1,0 +1,155 @@
+<html>
+<head>
+<title>pywmdockapps - WindowMaker dockapps written in Python</title>
+<link rel="stylesheet" type="text/css" href="my_style.css">
+</head>
+<body bgcolor=#FFFFFF text=#000000>
+<h1>pywmdockapps - WindowMaker dockapps written in Python</h1>
+
+<h3>What is this place?</h3>
+
+<p>pywmdockapps is the place to be if you are interested in <a
+href="http://www.windowmaker.org">WindowMaker</a>, <a
+href="http://dockapps.org">dockapps</a> and <a
+href="http://www.python.org">Python</a>.  WindowMaker dockapps are graphical
+applications fitting in a 64x64 tile.  they can work in WindowMaker or any
+other window manager which can handle WindowMaker style dockapps.
+pywmdockapps is a Python library enabling quick development of your own
+dockapps plus a small collection of usable examples.
+</p>
+
+<p>the included examples are quite untested.  they may work quite well, may
+not work at all, may set your computer in flames, even though this is not
+the most likely event among the three but you have been warned.  the one on
+which most work has been performed is pywmhdmon, but this too is no
+guarantee for better functioning.
+</p>
+
+<p>
+The example dockapps aim at simplicity and consistency. they are as similar
+as possible to each other and with no excessive graphics. Since they are
+written in Python, it shouldn't be too hard to change something you do not
+like about them.  if you do modify things according to your needs and tastes
+or if you simply try things out, please share your opinions/changes with the
+community, by sending a comment, suggestion, or just drop a note to say that
+you have tried it.  see contact information at the bottom of this page.  </p>
+
+<p>you may also consider filing a <a
+href="http://sourceforge.net/tracker/?group_id=147660&atid=769418">bug</a>
+or <a
+href="http://sourceforge.net/tracker/?group_id=147660&atid=769421">change
+request</a>...  if your request comes with a diff file, chances are that it
+will be processed quickly (a matter of 3/5 days).
+</p>
+
+<hr>
+
+<h3>News</h3>
+
+<p class="newsdate">2005-09-05</p>
+<p class="newstext">coordination taken over by Mario Frasca.  projected accepted in sourceforge.  </p>
+
+<p class="newsdate">2004-07-15</p>
+<p class="newstext">Minor feature enhancement/bug fix in pywmhdmon.</p>
+<p class="newsdate">2003-09-01</p>
+<p class="newstext">Some bugfixes in pywmdatetime and pywmhdmon.</p>
+<p class="newsdate">2003-07-02</p>
+<p class="newstext">Pywmgeneric now has support for up to ten mouse buttons.</p>
+<p class="newsdate">2003-06-28</p>
+<p class="newstext">Fixed a bug in three of the applications where a mouse click caused the app to
+hang.</p>
+<p class="newsdate">2003-06-27</p>
+<p class="newstext">Added a new dockapp, pywmgeneric.</p>
+<hr>
+
+<h3>Pywmgeneral</h3>
+<p>Pywmgeneral is a library that makes it possible to write WindowMaker
+dockapps in <a href='http://www.python.org'>Python</a>. Quite a bit of the
+code is taken from the old wmgeneral.c and I have just provided Python wrappers
+around these functions. The library also contains a Python part above the
+wrappers that ease up argument passing and return values. Also some other
+usable methods are provided there.
+</p>
+<hr>
+
+<h3>Pywmdatetime</h3>
+<img src="pictures/pywmdatetime.png" alt="pywmdatetime">
+<p>Pywmdatetime is a dockapp that displays the current time, date, weekday and
+week number. Formats and colours are easily configured. </p>
+<p>Changes:</p>
+<p class="newsdate">2003-09-01</p>
+<p class="newstext">Fixed a bug where the week didn't update if we used %q style week numbering.</p>
+<p class="newsdate">2003-06-28</p>
+<p class="newstext">Fixed a bug where a mouse click caused an infinite loop.</p>
+<p class="newsdate">2003-06-26</p>
+<p class="newstext">Fixed the bug where longer strings didn't get cleared when shorter ones where
+painted.
+</p>
+<hr>
+
+<h3>Pywmhdmon</h3>
+<img src="pictures/pywmhdmon.png" alt="pywmhdmon">
+<p>Pywmhdmon is a dockapp that monitors the free space of up to four of your
+filesystems. It also has a little bar that displays the current hard drive
+activity.</p>
+<p>Changes:</p>
+<p class="newsdate">2004-07-15</p>
+<p class="newstext">Added a patch from Mario Frasca (Thanks!) which prevents the app from showing
+the data from the host file system if there is no filesystem mounted at the
+given point.</p>
+<p class="newsdate">2003-09-01</p>
+<p class="newstext">Fixed a bug where the numbers weren't displayed if they were between 1000 and 1024.</p>
+<p class="newsdate">2003-06-28</p>
+<p class="newstext">Fixed a bug where a mouse click caused an infinite loop.
+</p>
+<hr>
+
+<h3>Pywmseti</h3>
+<img src="pictures/pywmseti.png" alt="pywmseti">
+<p>Pywmseti is a dockapp that monitors your <a
+href="http://setiathome.ssl.berkeley.edu/">SETI@home</a> progress. It displays
+how many workunits you have done and the progress on the current one. You can
+start and stop the current process by clicking anywhere within the window.</p>
+<hr>
+
+<h3>Pywmsysmon</h3>
+<img src="pictures/pywmsysmon.png" alt="pywmsysmon">
+<p>Pywmsysmon is a dockapp that displays your current CPU and memory usage. It
+has a graph displaying the history of the CPU usage and a bar to display the
+current amount of memory in use.</p>
+<p>Changes:</p>
+<p class="newsdate">2003-06-28</p>
+<p class="newstext">Fixed a bug where a mouse click caused an infinite loop.
+</p>
+<hr>
+
+<h3>Pywmgeneric</h3>
+<img src="pictures/pywmgeneric.png" alt="pywmgeneric">
+<p>Pywmgeneric is a dockapp that displays the first line of output from an
+external program, the returned string from an python method or an static
+string. Up to ten mouse actions can be associated with every displayed entry.
+</p>
+<p>Changes:</p>
+<p class="newsdate">2003-07-02</p> 
+<p class="newstext">Support for up to ten mouse buttons added. Some additionaly
+fine tuning.
+</p>
+<hr>
+
+<h3>download</h3>
+
+<p>all released files can be found <a
+href="http://sourceforge.net/project/showfiles.php?group_id=147660">here</a></p>.
+
+<p>not yet released versions can be downloaded <a
+href="http://sourceforge.net/cvs/?group_id=147660">through cvs</a>.</p>
+
+<h3>Contact</h3>
+<p>Is there anything you wonder about these programs? Any thoughts,
+comments, suggestions, bug reports or anything else? Don't hesitate to
+contact the developers of this project.  have a look at <a
+href="http://sourceforge.net/projects/pywmdockapps">the main page for this
+project</a>.</p>
+
+</body>
+</html>
