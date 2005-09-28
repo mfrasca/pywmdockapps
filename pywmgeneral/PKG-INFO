@@ -2,9 +2,9 @@ Metadata-Version: 1.0
 Name: pywmgeneral
 Version: 0.1
 Summary: Python module for making WindowMaker dockapps.
-Home-page: http://foo.unix.se/pywmdockapps
-Author: Kristoffer Erlandsson
-Author-email: krier115@student.liu.se
+Home-page: http://pywmdockapps.sourceforge.net
+Author: Mario Frasca
+Author-email: mfrasca@interia.pl
 License: GPL
-Description: UNKNOWN
+Description: (previous author/email: Kristoffer Erlandsson <krier115@student.liu.se>)
 Platform: UNKNOWN

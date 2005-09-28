@@ -17,10 +17,10 @@ module1 = Extension('pywmgeneral',
 setup(name = 'pywmgeneral',
       py_modules = ['pywmhelpers'],
       version = '0.1',
-      author = 'Kristoffer Erlandsson',
-      author_email = 'krier115@student.liu.se',
+      author = 'Mario Frasca',
+      author_email = 'mfrasca@interia.pl',
       description = 'Python module for making WindowMaker dockapps.',
-      url = 'http://foo.unix.se/pywmdockapps',
+      url = 'http://pywmdockapps.sourceforge.net',
       license = 'GPL',
       ext_modules = [module1])
 

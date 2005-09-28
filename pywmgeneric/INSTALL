@@ -1,5 +1,5 @@
 1. If you don't have pywmgeneral installed, install it first. Can be found
-   at http://foo.unix.se/pywmdockapps.
+   at http://pywmdockapps.sourceforge.net.
 
 2. Copy pywmgeneric.py to somewhere in your path (like ~/bin or
    /usr/local/bin).
@@ -9,5 +9,5 @@
 
 4. Enjoy.
 
-Trouble? E-mail me at <krier115@student.liu.se>.
+Trouble? E-mail me at Mario Frasca <mfrasca@interia.pl>.
 
