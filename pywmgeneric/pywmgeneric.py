@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+# -*- coding: utf-8 -*-
 '''pywmgeneric.py
 
 WindowMaker dockapp to display the output from an external program, or the
@@ -40,10 +40,10 @@ import ConfigParser
 import getopt
 import popen2
 
-import pywmhelpers
+from pywmgeneral import pywmhelpers
 
 class UserMethods:
-    '''Put methods that should be called when the action is method=... here.
+    """Put methods that should be called when the action is method=... here.
 
     The action methods should return a function, which in turn returns
     the string to be displayed (if no 'display =' exists) and stored
@@ -57,15 +57,43 @@ class UserMethods:
 
     THE METHODS ALLREADY HERE ARE JUST SAMPLES AND WILL PROBABLY NOT WORK
     WITH YOUR SYSTEM.
-    '''
+    """
+
+    userTicks = sysTicks = niceTicks = idleTicks = 0
+    
     def getCpuTemp(self):
-        try:
-            f = file('/proc/sys/dev/sensors/w83697hf-isa-0290/temp2', 'r')
-        except IOError:
-            return lambda: 'error'
-        temp = f.readline().split()[2]
-        f.close()
-        return lambda: 'cpu: %s' % temp
+        def result():
+            try:
+                f = file('/proc/stat', 'r')
+            except IOError:
+                return lambda: 'error'
+
+            import re
+            cpuinfo = re.compile(r'^cpu.* (?P<user>[0-9]+) +(?P<nice>[0-9]+)'
+                                 r'+(?P<sys>[0-9]+) +(?P<idle>[0-9]+)')
+            match = dict([(k, int(v))
+                           for (k,v) in cpuinfo.match(f.readline()).groupdict().items()])
+            totalTicks = ((match['user'] - self.userTicks) +
+                          (match['sys'] - self.sysTicks) +
+                          (match['nice'] - self.niceTicks) +
+                          (match['idle'] - self.idleTicks));
+
+            if (totalTicks > 0):
+                user = (100. * (match['user'] - self.userTicks)) / totalTicks;
+                sys = (100. * (match['sys'] - self.sysTicks)) / totalTicks;
+                nice = (100. * (match['nice'] - self.niceTicks)) / totalTicks;
+                idle = (100. - (user + sys + nice));
+            else:
+                user = sys = nice = idle = 0;
+
+            self.userTicks = match['user']
+            self.sysTicks = match['sys']
+            self.niceTicks = match['nice']
+            self.idleTicks = match['idle']
+
+            f.close()
+            return '%02.f/%02.f/%02.f' % (user, nice, sys)
+        return result
 
     def getSysTemp(self):
         try:
@@ -118,7 +146,7 @@ digits = '0123456789:/-%. '
 maxChars = 9
 
 defaultConfigFile = '~/.pywmgenericrc'
-defaultRGBFiles = ('/usr/lib/X11/rgb.txt', '/usr/X11R6/lib/X11/rgb.txt')
+defaultRGBFiles = ('/usr/share/X11/rgb.txt', '/usr/X11R6/lib/X11/rgb.txt')
 
 err = sys.stderr.write
 
@@ -143,10 +171,10 @@ def getXY(line):
     return 0, line * (letterHeight + 3) + 1
 
 def isTrue(s):
-    '''Return true if the string s can be interpreted as a true value.
+    """Return true if the string s can be interpreted as a true value.
 
     Raises ValueError if we get a string we don't like.
-    '''
+    """
     trueThings = ['on', 'yes', '1', 'true']
     falseThings = ['off', 'no', '0', 'false']
     if s in trueThings:
@@ -345,13 +373,13 @@ class Entry:
         pass
 
     def translateText(self, text):
-        '''Translate chars that can't be painted in the app to something nicer.
+        """Translate chars that can't be painted in the app to something nicer.
         
         Or nothing if we can't come up with something good. Could be nice to
         extend this function with chars more fitting for your language.
-        '''
-        fromChars = '�����'
-        toChars = 'aaoeu'
+        """
+        fromChars = 'áéíóúàèìòùâêîôûäëïöü'
+        toChars = 'aeiouaeiouaeiouaeiou'
         deleteChars = []
         for c in text.lower():
             if not (c in letters or c in digits or c in fromChars):
@@ -484,15 +512,15 @@ class PywmGeneric:
         while 1:
             counter += 1
             self._checkForEvents()
-            if counter % 3 == 0:
+            if counter % 2 == 0:
                 [e.tick1() for e in self._entrys if not e is None]
-            if counter % 100 == 0:
+            if counter % 20 == 0:
                 [e.tick2() for e in self._entrys if not e is None]
 
             if counter == 999999:
                 counter = -1
             pywmhelpers.redraw()
-            time.sleep(0.1)
+            time.sleep(0.5)
 
 def parseCommandLine(argv):
     '''Parse the commandline. Return a dictionary with options and values.'''

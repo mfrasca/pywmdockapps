@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2.3
 
 """pywmhdmon.py
 
@@ -55,7 +55,7 @@ import time
 import getopt
 import os
 
-import pywmhelpers
+from pywmgeneral import pywmhelpers
 
 width = 64
 height = 64

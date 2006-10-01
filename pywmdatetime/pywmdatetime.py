@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-'''pywmdatetime.py
+"""pywmdatetime.py
 
 WindowMaker dockapp that displays time, date, weekday and week number.
 
@@ -25,8 +25,8 @@ Added event handling for graceful shutdown
 
 2003-06-16 Kristoffer Erlandsson
 First workingish version
-'''
-usage = '''pywmdatetime.py [options]
+"""
+usage = """pywmdatetime.py [options]
 Available options are:
 -h, --help                      print this help
 -f, --foreground <color>        set the foreground color
@@ -40,14 +40,14 @@ Available options are:
 
 The formats are the same as Python's strftime() accept. See the sample
 rc-file for more information about this.
-'''
+"""
 
 import sys
 import time
 import getopt
 import os
 
-import pywmhelpers
+from pywmgeneral import pywmhelpers
 
 width = 64
 height = 64

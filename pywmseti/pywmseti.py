@@ -37,7 +37,7 @@ import time
 import getopt
 import os
 
-import pywmhelpers
+from pywmgeneral import pywmhelpers
 
 width = 64
 height = 64
