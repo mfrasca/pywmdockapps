@@ -42,6 +42,16 @@ import popen2
 
 from pywmgeneral import pywmhelpers
 
+prevStat = {'user':0,
+            'nice':0,
+            'sys':0,
+            'idle':0,
+            'total':0,
+            }
+import re
+cpuinfo = re.compile(r'^cpu[^ ]* +(?P<user>[0-9]+) +(?P<nice>[0-9]+)'
+                     r'+(?P<sys>[0-9]+) +(?P<idle>[0-9]+)')
+
 class UserMethods:
     """Put methods that should be called when the action is method=... here.
 
@@ -55,7 +65,7 @@ class UserMethods:
     An instance of this class is created at initialization and passed to all
     entries, so keep in mind that they share the same object.
 
-    THE METHODS ALLREADY HERE ARE JUST SAMPLES AND WILL PROBABLY NOT WORK
+    THE METHODS ALREADY HERE ARE JUST SAMPLES AND WILL PROBABLY NOT WORK
     WITH YOUR SYSTEM.
     """
 
@@ -63,36 +73,33 @@ class UserMethods:
     
     def getCpuTemp(self):
         def result():
+            global prevStat
             try:
                 f = file('/proc/stat', 'r')
             except IOError:
-                return lambda: 'error'
+                return 'error'
 
-            import re
-            cpuinfo = re.compile(r'^cpu.* (?P<user>[0-9]+) +(?P<nice>[0-9]+)'
-                                 r'+(?P<sys>[0-9]+) +(?P<idle>[0-9]+)')
-            match = dict([(k, int(v))
-                           for (k,v) in cpuinfo.match(f.readline()).groupdict().items()])
-            totalTicks = ((match['user'] - self.userTicks) +
-                          (match['sys'] - self.sysTicks) +
-                          (match['nice'] - self.niceTicks) +
-                          (match['idle'] - self.idleTicks));
-
-            if (totalTicks > 0):
-                user = (100. * (match['user'] - self.userTicks)) / totalTicks;
-                sys = (100. * (match['sys'] - self.sysTicks)) / totalTicks;
-                nice = (100. * (match['nice'] - self.niceTicks)) / totalTicks;
-                idle = (100. - (user + sys + nice));
-            else:
-                user = sys = nice = idle = 0;
-
-            self.userTicks = match['user']
-            self.sysTicks = match['sys']
-            self.niceTicks = match['nice']
-            self.idleTicks = match['idle']
-
+            currStat = dict(
+                [(k, int(v))
+                 for (k,v) in cpuinfo.match(f.readline()).groupdict().items()]
+                )
             f.close()
-            return '%02.f/%02.f/%02.f' % (user, nice, sys)
+
+            total = 0
+            for k,v in currStat.items():
+                total += v
+            currStat['total'] = total
+            totalTicks = (currStat['total'] - prevStat['total'])
+
+            result = {}
+            if (totalTicks <= 0):
+                return '00/00/00'
+
+            for k in prevStat:
+                result[k] = (100. * (currStat[k] - prevStat[k])) / totalTicks
+            prevStat = currStat
+
+            return '%(user)02.f/%(sys)02.f/%(idle)02.f' % result
         return result
 
     def getSysTemp(self):
@@ -605,6 +612,8 @@ def readConfigFile(fileName):
 def main():
     clConfig = parseCommandLine(sys.argv)
     configFile = clConfig.get('configfile', defaultConfigFile)
+    if not configFile.count(os.sep):
+        configFile = os.sep.join(sys.argv[0].split(os.sep)[:-1]) + os.sep + configFile
     configFile = os.path.expanduser(configFile)
     config = readConfigFile(configFile)
     parseColors(defaultRGBFiles, clConfig, xpm)
