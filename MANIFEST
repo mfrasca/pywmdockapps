@@ -10,6 +10,7 @@ examples/sample.pywmdatetimerc
 examples/sample.pywmgenericrc
 examples/sample.pywmhdmonrc
 examples/sample.pywmsetirc
+examples/tmount
 wmdocklib/README
 wmdocklib/__init__.py
 wmdocklib/pywmgeneral.c
