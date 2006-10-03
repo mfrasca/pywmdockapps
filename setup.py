@@ -28,5 +28,6 @@ setup(name="pywmdockapps",
       scripts=['examples/pywmdatetime.py',
                'examples/pywmhdmon.py',
                'examples/pywmseti.py',
-               'examples/pywmsysmon.py'],
+               'examples/pywmsysmon.py',
+               'examples/tmount'],
       ext_modules = [module1])
