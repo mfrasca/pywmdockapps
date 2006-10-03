@@ -1,0 +1,596 @@
+/* pywmgeneral.c
+ *
+ * Python bindings to some of the most important functions in the widely used
+ * wmgeneral.c. Also some added functions. The rc file parser is removed since
+ * Python provide better facilities for this.
+ *
+ * Copyright (C) 2003 Kristoffer Erlandsson
+ *
+ * Licensed under the GNU General Public License.
+ *
+ * History:
+ *
+ * 2003-06-24 Kristoffer Erlandsson
+ * Added some additional event handling.
+ *
+ * 2003-06-16 Kristoffer Erlandsson
+ * Added checkForMouseClick to make catching of mouse clicks available from
+ * Python.
+ *
+ * 2003-06-14 Kristoffer Erlandsson
+ * Finished support for "everything" included in wmgeneral by default.
+ *
+ * 2003-06-13 Kristoffer Erlandsson
+ * File created made most of the pure wrapper functions and xpm inclusion.
+ *
+ *
+ *
+ * Thanks to Martijn Pieterse for createing the original wmgeneral.c
+ *
+*/
+
+#include <Python.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+#include <ctype.h>
+#include <stdarg.h>
+
+#include <X11/Xlib.h>
+#include <X11/xpm.h>
+#include <X11/extensions/shape.h>
+
+#include "pywmgeneral.h"
+
+  /*****************/
+ /* X11 Variables */
+/*****************/
+
+Window		Root;
+int			screen;
+int			x_fd;
+int			d_depth;
+XSizeHints	mysizehints;
+XWMHints	mywmhints;
+Pixel		back_pix, fore_pix;
+char		*Geometry = "";
+Window		iconwin, win;
+GC			NormalGC;
+XpmIcon		wmgen;
+Pixmap		pixmask;
+Atom        deleteAtom; /* Added 2003-06-24 for graceful shutdown. */
+
+/*****************************************************************************/
+/* The Python stuff                                                          */ 
+/*****************************************************************************/
+static char **pixmap;  /* Global pixmap, we only support one of these */
+static char *maskBits; /* Global maskbits, also only 1 supported */
+
+char **pyListToStrs(PyObject *l) {
+    /* Convert a python list of strings to a char **. */
+    int size, i;
+    char **target;
+    PyObject *s;
+    if (!PyList_Check(l)) {
+        PyErr_SetString(PyExc_TypeError, "List expected.");
+        return NULL;
+    }
+    size = PyList_Size(l);
+    target = (char **)malloc(size * sizeof(char *));
+    for (i = 0; i < size; i++) {
+        s = PySequence_GetItem(l, i);
+        if (s == NULL)
+            return NULL; /* Shouldn't happen. */
+        if (!PyString_Check(s)) {
+            PyErr_SetString(PyExc_TypeError, "String expected.");
+            return NULL;
+        }
+        target[i] = PyString_AsString(s);
+    }
+    return target;
+}
+
+
+static PyObject *
+pywmgeneral_includePixmap(PyObject *self, PyObject *args) {
+    /* Set the global pixmap. */
+    PyObject *arg;
+    if (!PyArg_ParseTuple(args, "O", &arg))
+        return NULL;
+    if(!(pixmap = pyListToStrs(arg)))
+        return NULL;
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+
+static PyObject *
+pywmgeneral_openXwindow(PyObject *self, PyObject *args) {
+    /* This function now uses the global variable pixmap as xpm and creates the
+     * xbm mask of the given height and width from this one. IOW no other xbm
+     * masks are supported at the moment. This shouldn't be needed except in
+     * special cases (I think...)
+     */
+    int argc, width, height;
+    PyObject *argvTmp;
+    char **argv;
+    if (!PyArg_ParseTuple(args, "iOii", &argc, &argvTmp, &width, &height))
+        return NULL;
+    if (!(argv = pyListToStrs(argvTmp)))
+        return NULL;
+    maskBits = (char *)malloc(width * height * sizeof(char));
+    createXBMfromXPM(maskBits, pixmap, width, height);
+    openXwindow(argc, argv, pixmap, maskBits, width, height);
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+static PyObject *
+pywmgeneral_redrawWindow(PyObject *self, PyObject *args) {
+    if (!PyArg_ParseTuple(args, ""))
+        return NULL;
+    RedrawWindow();
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+static PyObject *
+pywmgeneral_redrawWindowXY(PyObject *self, PyObject *args) {
+    int x, y;
+    if (!PyArg_ParseTuple(args, "ii",  &x, &y))
+        return NULL;
+    RedrawWindowXY(x, y);
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+static PyObject *
+pywmgeneral_addMouseRegion(PyObject *self, PyObject *args) {
+    int index, left, top, right, bottom;
+    if (!PyArg_ParseTuple(args, "iiiii", &index, &left, &top, &right, &bottom))
+        return NULL;
+    AddMouseRegion(index, left, top, right, bottom);
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+static PyObject *
+pywmgeneral_checkMouseRegion(PyObject *self, PyObject *args) {
+    int x, y;
+    if (!PyArg_ParseTuple(args, "ii", &x, &y))
+        return NULL;
+    return Py_BuildValue("i", CheckMouseRegion(x, y));
+}
+
+static PyObject *
+pywmgeneral_copyXPMArea(PyObject *self, PyObject *args) {
+    /* x - source x, y - source y
+     * sx - width, sy - height
+     * dx - destination x, dy - destination y
+     *
+     * Variables named as in the original wmgeneral.c, don't blame me for it :)
+     */
+    int x, y, sx, sy, dx, dy;
+    if (!PyArg_ParseTuple(args, "iiiiii", &x, &y, &sx, &sy, &dx, &dy))
+        return NULL;
+    copyXPMArea(x, y, sx, sy, dx, dy);
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+static PyObject *
+pywmgeneral_checkForEvents(PyObject *self, PyObject *args) {
+    /* If we find an event we handle, return a dicitionary containing some
+     * information about it. Return None if there are no events we handle.
+     * Ignore events we don't handle. Also we provide a handler for when the
+     * window is exposed, redraw it.
+     */
+    XEvent event;
+    if (!PyArg_ParseTuple(args, ""))
+        return NULL;
+    while (XPending(display)) {
+        XNextEvent(display, &event);
+        if (event.type == Expose) {
+            RedrawWindow();
+        }
+        else if (event.type == ClientMessage) {
+            if((Atom)event.xclient.data.l[0] == deleteAtom) {
+                XCloseDisplay(display);
+                return Py_BuildValue("{s:s}", "type", "destroynotify");
+            }
+        }
+        else if (event.type == DestroyNotify) {
+            /* This seems to never happen, why? */
+            XCloseDisplay(display);
+            return Py_BuildValue("{s:s}", "type", "destroynotify");
+        }
+        else if (event.type == ButtonRelease) {
+            return Py_BuildValue("{s:s,s:i,s:i,s:i}", "type", "buttonrelease",
+                                "button", event.xbutton.button, "x", 
+                                event.xbutton.x, "y", event.xbutton.y);
+        }
+    }
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+static PyMethodDef PyWmgeneralMethods[] = {
+    {"openXwindow", pywmgeneral_openXwindow, METH_VARARGS,
+        "Open the X window containing everything."},
+    {"includePixmap", pywmgeneral_includePixmap, METH_VARARGS,
+        "Set the global pixmap that will be used as a mask and for everything else."},
+    {"redrawWindow", pywmgeneral_redrawWindow, METH_VARARGS,
+        "Redraw the window."},
+    {"redrawWindowXY", pywmgeneral_redrawWindowXY, METH_VARARGS,
+        "Redraw a give region of the window."},
+    {"addMouseRegion", pywmgeneral_addMouseRegion, METH_VARARGS,
+        "Add a mouse region with a given index."},
+    {"checkMouseRegion", pywmgeneral_checkMouseRegion, METH_VARARGS,
+        "Check if the given coordinates are in any mouse region."},
+    {"copyXPMArea", pywmgeneral_copyXPMArea, METH_VARARGS,
+        "Copy an area of the global XPM."},
+    {"checkForEvents", pywmgeneral_checkForEvents, METH_VARARGS,
+        "Check for some Xevents"},
+    {NULL, NULL, 0, NULL}
+};
+
+void initpywmgeneral(void) {
+    Py_InitModule("pywmgeneral", PyWmgeneralMethods);
+}
+
+/*****************************************************************************/
+/* Original C sources (With some modifications)                              */
+/*****************************************************************************/
+
+  /*****************/
+ /* Mouse Regions */
+/*****************/
+
+typedef struct {
+	int		enable;
+	int		top;
+	int		bottom;
+	int		left;
+	int		right;
+} MOUSE_REGION;
+
+MOUSE_REGION	mouse_region[MAX_MOUSE_REGION];
+
+  /***********************/
+ /* Function Prototypes */
+/***********************/
+
+static void GetXPM(XpmIcon *, char **);
+static Pixel GetColor(char *);
+void RedrawWindow(void);
+void AddMouseRegion(int, int, int, int, int);
+int CheckMouseRegion(int, int);
+
+/*******************************************************************************\
+|* GetXPM																	   *|
+\*******************************************************************************/
+
+static void GetXPM(XpmIcon *wmgen, char *pixmap_bytes[]) {
+
+	XWindowAttributes	attributes;
+	int					err;
+
+	/* For the colormap */
+	XGetWindowAttributes(display, Root, &attributes);
+
+	wmgen->attributes.valuemask |= (XpmReturnPixels | XpmReturnExtensions);
+
+	err = XpmCreatePixmapFromData(display, Root, pixmap_bytes, &(wmgen->pixmap),
+					&(wmgen->mask), &(wmgen->attributes));
+	
+	if (err != XpmSuccess) {
+		fprintf(stderr, "Not enough free colorcells.\n");
+		exit(1);
+	}
+}
+
+/*******************************************************************************\
+|* GetColor																	   *|
+\*******************************************************************************/
+
+static Pixel GetColor(char *name) {
+
+	XColor				color;
+	XWindowAttributes	attributes;
+
+	XGetWindowAttributes(display, Root, &attributes);
+
+	color.pixel = 0;
+	if (!XParseColor(display, attributes.colormap, name, &color)) {
+		fprintf(stderr, "wm.app: can't parse %s.\n", name);
+	} else if (!XAllocColor(display, attributes.colormap, &color)) {
+		fprintf(stderr, "wm.app: can't allocate %s.\n", name);
+	}
+	return color.pixel;
+}
+
+/*******************************************************************************\
+|* flush_expose																   *|
+\*******************************************************************************/
+
+static int flush_expose(Window w) {
+
+	XEvent 		dummy;
+	int			i=0;
+
+	while (XCheckTypedWindowEvent(display, w, Expose, &dummy))
+		i++;
+
+	return i;
+}
+
+/*******************************************************************************\
+|* RedrawWindow																   *|
+\*******************************************************************************/
+
+void RedrawWindow(void) {
+	
+	flush_expose(iconwin);
+	XCopyArea(display, wmgen.pixmap, iconwin, NormalGC, 
+				0,0, wmgen.attributes.width, wmgen.attributes.height, 0,0);
+	flush_expose(win);
+	XCopyArea(display, wmgen.pixmap, win, NormalGC,
+				0,0, wmgen.attributes.width, wmgen.attributes.height, 0,0);
+}
+
+/*******************************************************************************\
+|* RedrawWindowXY															   *|
+\*******************************************************************************/
+
+void RedrawWindowXY(int x, int y) {
+	
+	flush_expose(iconwin);
+	XCopyArea(display, wmgen.pixmap, iconwin, NormalGC, 
+				x,y, wmgen.attributes.width, wmgen.attributes.height, 0,0);
+	flush_expose(win);
+	XCopyArea(display, wmgen.pixmap, win, NormalGC,
+				x,y, wmgen.attributes.width, wmgen.attributes.height, 0,0);
+}
+
+/*******************************************************************************\
+|* AddMouseRegion															   *|
+\*******************************************************************************/
+
+void AddMouseRegion(int index, int left, int top, int right, int bottom) {
+
+	if (index < MAX_MOUSE_REGION) {
+		mouse_region[index].enable = 1;
+		mouse_region[index].top = top;
+		mouse_region[index].left = left;
+		mouse_region[index].bottom = bottom;
+		mouse_region[index].right = right;
+	}
+}
+
+/*******************************************************************************\
+|* CheckMouseRegion															   *|
+\*******************************************************************************/
+
+int CheckMouseRegion(int x, int y) {
+
+	int		i;
+	int		found;
+
+	found = 0;
+
+	for (i=0; i<MAX_MOUSE_REGION && !found; i++) {
+		if (mouse_region[i].enable &&
+			x <= mouse_region[i].right &&
+			x >= mouse_region[i].left &&
+			y <= mouse_region[i].bottom &&
+			y >= mouse_region[i].top)
+			found = 1;
+	}
+	if (!found) return -1;
+	return (i-1);
+}
+
+/*******************************************************************************\
+|* createXBMfromXPM															   *|
+\*******************************************************************************/
+void createXBMfromXPM(char *xbm, char **xpm, int sx, int sy) {
+
+	int		i,j,k;
+	int		width, height, numcol, depth;
+    int 	zero=0;
+	unsigned char	bwrite;
+    int		bcount;
+    int     curpixel;
+	
+	sscanf(*xpm, "%d %d %d %d", &width, &height, &numcol, &depth);
+
+
+    for (k=0; k!=depth; k++)
+    {
+        zero <<=8;
+        zero |= xpm[1][k];
+    }
+        
+	for (i=numcol+1; i < numcol+sy+1; i++) {
+		bcount = 0;
+		bwrite = 0;
+		for (j=0; j<sx*depth; j+=depth) {
+            bwrite >>= 1;
+
+            curpixel=0;
+            for (k=0; k!=depth; k++)
+            {
+                curpixel <<=8;
+                curpixel |= xpm[i][j+k];
+            }
+                
+            if ( curpixel != zero ) {
+				bwrite += 128;
+			}
+			bcount++;
+			if (bcount == 8) {
+				*xbm = bwrite;
+				xbm++;
+				bcount = 0;
+				bwrite = 0;
+			}
+		}
+	}
+}
+
+/*******************************************************************************\
+|* copyXPMArea																   *|
+\*******************************************************************************/
+
+void copyXPMArea(int x, int y, int sx, int sy, int dx, int dy) {
+
+	XCopyArea(display, wmgen.pixmap, wmgen.pixmap, NormalGC, x, y, sx, sy, dx, dy);
+
+}
+
+/*******************************************************************************\
+|* copyXBMArea																   *|
+\*******************************************************************************/
+
+void copyXBMArea(int x, int y, int sx, int sy, int dx, int dy) {
+
+	XCopyArea(display, wmgen.mask, wmgen.pixmap, NormalGC, x, y, sx, sy, dx, dy);
+}
+
+
+/*******************************************************************************\
+|* setMaskXY																   *|
+\*******************************************************************************/
+
+void setMaskXY(int x, int y) {
+
+	 XShapeCombineMask(display, win, ShapeBounding, x, y, pixmask, ShapeSet);
+	 XShapeCombineMask(display, iconwin, ShapeBounding, x, y, pixmask, ShapeSet);
+}
+
+/*******************************************************************************\
+|* openXwindow																   *|
+\*******************************************************************************/
+void openXwindow(int argc, char *argv[], char *pixmap_bytes[], char *pixmask_bits, int pixmask_width, int pixmask_height) {
+
+	unsigned int	borderwidth = 1;
+	XClassHint		classHint;
+	char			*display_name = NULL;
+	char			*wname = argv[0];
+	XTextProperty	name;
+
+	XGCValues		gcv;
+	unsigned long	gcm;
+
+	char			*geometry = NULL;
+
+	int				dummy=0;
+	int				i, wx, wy;
+
+    /* Changed to work better with Python. Changed check in for loop to control
+     * argc instead of argv.
+     */
+	for (i=1; i < argc; i++) {
+		if (!strcmp(argv[i], "-display")) {
+			display_name = argv[i+1];
+			i++;
+		}
+		if (!strcmp(argv[i], "-geometry")) {
+			geometry = argv[i+1];
+			i++;
+		}
+	}
+
+	if (!(display = XOpenDisplay(display_name))) {
+		fprintf(stderr, "%s: can't open display %s\n", 
+						wname, XDisplayName(display_name));
+		exit(1);
+	}
+	screen  = DefaultScreen(display);
+	Root    = RootWindow(display, screen);
+	d_depth = DefaultDepth(display, screen);
+	x_fd    = XConnectionNumber(display);
+
+	/* Convert XPM to XImage */
+	GetXPM(&wmgen, pixmap_bytes);
+
+	/* Create a window to hold the stuff */
+	mysizehints.flags = USSize | USPosition;
+	mysizehints.x = 0;
+	mysizehints.y = 0;
+
+	back_pix = GetColor("white");
+	fore_pix = GetColor("black");
+
+	XWMGeometry(display, screen, Geometry, NULL, borderwidth, &mysizehints,
+				&mysizehints.x, &mysizehints.y,&mysizehints.width,&mysizehints.height, &dummy);
+
+	mysizehints.width = 64;
+	mysizehints.height = 64;
+		
+	win = XCreateSimpleWindow(display, Root, mysizehints.x, mysizehints.y,
+				mysizehints.width, mysizehints.height, borderwidth, fore_pix, back_pix);
+	
+	iconwin = XCreateSimpleWindow(display, win, mysizehints.x, mysizehints.y,
+				mysizehints.width, mysizehints.height, borderwidth, fore_pix, back_pix);
+
+
+    /* Added 2003-06-24 for graceful shutdown. */
+    deleteAtom = XInternAtom(display, "WM_DELETE_WINDOW", 0);
+    XSetWMProtocols(display, win, &deleteAtom, 1);
+
+
+	/* Activate hints */
+	XSetWMNormalHints(display, win, &mysizehints);
+	classHint.res_name = wname;
+	classHint.res_class = wname;
+	XSetClassHint(display, win, &classHint);
+
+	XSelectInput(display, win, ButtonPressMask | ExposureMask | ButtonReleaseMask | PointerMotionMask | StructureNotifyMask);
+	XSelectInput(display, iconwin, ButtonPressMask | ExposureMask | ButtonReleaseMask | PointerMotionMask | StructureNotifyMask);
+
+	if (XStringListToTextProperty(&wname, 1, &name) == 0) {
+		fprintf(stderr, "%s: can't allocate window name\n", wname);
+		exit(1);
+	}
+
+	XSetWMName(display, win, &name);
+
+	/* Create GC for drawing */
+	
+	gcm = GCForeground | GCBackground | GCGraphicsExposures;
+	gcv.foreground = fore_pix;
+	gcv.background = back_pix;
+	gcv.graphics_exposures = 0;
+	NormalGC = XCreateGC(display, Root, gcm, &gcv);
+
+	/* ONLYSHAPE ON */
+
+	pixmask = XCreateBitmapFromData(display, win, pixmask_bits, pixmask_width, pixmask_height);
+
+	XShapeCombineMask(display, win, ShapeBounding, 0, 0, pixmask, ShapeSet);
+	XShapeCombineMask(display, iconwin, ShapeBounding, 0, 0, pixmask, ShapeSet);
+
+	/* ONLYSHAPE OFF */
+
+	mywmhints.initial_state = WithdrawnState;
+	mywmhints.icon_window = iconwin;
+	mywmhints.icon_x = mysizehints.x;
+	mywmhints.icon_y = mysizehints.y;
+	mywmhints.window_group = win;
+	mywmhints.flags = StateHint | IconWindowHint | IconPositionHint | WindowGroupHint;
+
+	XSetWMHints(display, win, &mywmhints);
+
+	XSetCommand(display, win, argv, argc);
+	XMapWindow(display, win);
+
+	if (geometry) {
+		if (sscanf(geometry, "+%d+%d", &wx, &wy) != 2) {
+			fprintf(stderr, "Bad geometry string.\n");
+			exit(1);
+		}
+		XMoveWindow(display, win, wx, wy);
+	}
+}

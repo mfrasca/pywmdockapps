@@ -1,6 +1,8 @@
 README.txt
 setup.py
+examples/README
 examples/pywmdatetime.py
+examples/pywmgeneric.py
 examples/pywmhdmon.py
 examples/pywmseti.py
 examples/pywmsysmon.py
@@ -8,12 +10,8 @@ examples/sample.pywmdatetimerc
 examples/sample.pywmgenericrc
 examples/sample.pywmhdmonrc
 examples/sample.pywmsetirc
-examples/setup.py
-pywmgeneral/__init__.py
-pywmgeneral/pywmhelpers.py
-pywmgeneral/setup.py
+wmdocklib/README
 wmdocklib/__init__.py
 wmdocklib/pywmgeneral.c
 wmdocklib/pywmgeneral.h
-wmdocklib/pywmgeneric.py
 wmdocklib/pywmhelpers.py

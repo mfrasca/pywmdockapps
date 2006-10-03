@@ -1,2 +1,2 @@
 include *.txt
-include */*.py */*.c */*.h */sample.pywm*rc
+include */*.py */*.c */*.h */sample.pywm*rc */README
