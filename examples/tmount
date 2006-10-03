@@ -1,0 +1,35 @@
+#!/bin/sh
+
+# tmount - toggle mount / eject
+#
+# usage: tmount mountpoint ejectable
+#
+# parameter mountpoint: the mount point, without trailing '/'
+#           ejectable:  not empty indicates that the media is software ejectable
+# action: if the indicated file system is not mounted, mounts it
+#         otherwise unmounts it
+# if mounting fails or when unmounting, ejects software ejectable
+# media.
+
+if [ "$2" == "" ]; then eject=echo
+else eject=eject
+fi
+
+mountpointIndicated=$1
+mountpointFound=`df $1 | tail -1 | cut -d% -f2`
+
+if [ $mountpointIndicated = $mountpointFound ]
+    then
+
+    umount $mountpointIndicated 
+    $eject $mountpointIndicated
+
+else
+
+    # my smartmedia does not mount correctly after a media change
+    # second try always succeeds.  ask me why!  if neither mount
+    # attempt succeeds, then attempt ejecting ejectable media
+
+    mount $mountpointIndicated || mount $mountpointIndicated || $eject $mountpointIndicated
+
+fi

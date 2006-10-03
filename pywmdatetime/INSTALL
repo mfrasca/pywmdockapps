@@ -1,8 +1,0 @@
-1. If you don't have pywmgeneral installed, install it first. Can be found
-   at http://pywmdockapps.sourceforge.net
-
-2. Copy pywmdatetime.py to somewhere in your path (like ~/bin or
-   /usr/local/bin).
-
-3. Copy the sample.pywmdatetimerc to ~/.pywmdatetimerc and edit as you like.
-
