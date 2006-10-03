@@ -47,7 +47,7 @@ import time
 import getopt
 import os
 
-from pywmgeneral import pywmhelpers
+import wmdocklib
 
 width = 64
 height = 64
@@ -79,7 +79,7 @@ maxCharsPerLine = 9
 
 def addString(s, x, y):
     try:
-        pywmhelpers.addString(s, x, y, letterWidth, letterHeight, lettersStartX,
+        wmdocklib.addString(s, x, y, letterWidth, letterHeight, lettersStartX,
                           lettersStartY, letters, digitWidth, digitHeight,
                           digitsStartX, digitsStartY, digits, xOffset, yOffset,
                           width, height)
@@ -89,14 +89,14 @@ def addString(s, x, y):
 
 def clearLine(y):
     '''Clear a line of text at position y.'''
-    pywmhelpers.copyXPMArea(73, yOffset, width - 2 * xOffset, letterHeight,
+    wmdocklib.copyXPMArea(73, yOffset, width - 2 * xOffset, letterHeight,
                             xOffset, y + yOffset)
 
 def getCenterStartPos(s):
-    return pywmhelpers.getCenterStartPos(s, letterWidth, width, xOffset)
+    return wmdocklib.getCenterStartPos(s, letterWidth, width, xOffset)
 
 def getVertSpacing(numLines, margin):
-    return pywmhelpers.getVertSpacing(numLines, margin, height, letterHeight, 
+    return wmdocklib.getVertSpacing(numLines, margin, height, letterHeight, 
                                       yOffset)
 
 def calculateWeek(localTime):
@@ -147,11 +147,11 @@ def parseCommandLine(argv):
     return d
 
 def checkForEvents():
-    event = pywmhelpers.getEvent()
+    event = wmdocklib.getEvent()
     while not event is None:
         if event['type'] == 'destroynotify':
             sys.exit(0)
-        event = pywmhelpers.getEvent()
+        event = wmdocklib.getEvent()
 
 def mainLoop(timeFmt, dateFmt, dayFmt, weekFmt):
     recalcWeek = weekFmt.find('%q') + 1  # True if we found %q.
@@ -197,7 +197,7 @@ def mainLoop(timeFmt, dateFmt, dayFmt, weekFmt):
             lastStrs[3] = weekStr
         if counter == 999999:
             counter = -1
-        pywmhelpers.redraw()
+        wmdocklib.redraw()
         time.sleep(0.1)
 
 def parseColors(defaultRGBFileNames, config, xpm):
@@ -221,17 +221,17 @@ def parseColors(defaultRGBFileNames, config, xpm):
         for key, value in colors:
             col = config.get(key)
             if not col is None:
-                code = pywmhelpers.getColorCode(col, rgbFileName)
+                code = wmdocklib.getColorCode(col, rgbFileName)
                 if code is None:
                     sys.stderr.write('Bad colorcode for %s, ignoring.\n' % key)
                 else:
-                    pywmhelpers.setColor(xpm, value, code)
+                    wmdocklib.setColor(xpm, value, code)
 
 def main():
     clConfig = parseCommandLine(sys.argv)
     configFile = clConfig.get('configfile', defaultConfigFile)
     configFile = os.path.expanduser(configFile)
-    fileConfig = pywmhelpers.readConfigFile(configFile, sys.stderr)
+    fileConfig = wmdocklib.readConfigFile(configFile, sys.stderr)
     # Merge the two configs, let the commandline options overwrite those in the
     # configuration file.
     config = fileConfig
@@ -239,7 +239,7 @@ def main():
         config[i[0]] = i[1]
 
     parseColors(defaultRGBFiles, config, xpm)
-    pywmhelpers.setDefaultPixmap(xpm)
+    wmdocklib.setDefaultPixmap(xpm)
     timeFmt = config.get('timeformat', timeDefaultFormat)
     dateFmt = config.get('dateformat', dateDefaultFormat)
     dayFmt = config.get('weekdayformat', dayDefaultFormat)
@@ -252,7 +252,7 @@ def main():
     except IndexError:  # Should only happen when using the interpreter.
         programName = ''
     sys.argv[0] = programName
-    pywmhelpers.openXwindow(sys.argv, width, height)
+    wmdocklib.openXwindow(sys.argv, width, height)
     mainLoop(timeFmt, dateFmt, dayFmt, weekFmt)
 
 xpm = \

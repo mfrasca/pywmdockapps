@@ -37,7 +37,7 @@ import time
 import getopt
 import os
 
-from pywmgeneral import pywmhelpers
+import wmdocklib
 
 width = 64
 height = 64
@@ -96,7 +96,7 @@ class PywmSeti:
         
     def addString(self, s, x, y):
         try:
-            pywmhelpers.addString(s, x, y, letterWidth, letterHeight,
+            wmdocklib.addString(s, x, y, letterWidth, letterHeight,
                         lettersStartX, lettersStartY, letters, digitWidth,
                         digitHeight, digitsStartX, digitsStartY, digits,
                         xOffset, yOffset, width, height)
@@ -105,10 +105,10 @@ class PywmSeti:
             sys.exit(3)
 
     def getCenterStartPos(self, s):
-        return pywmhelpers.getCenterStartPos(s, letterWidth, width, xOffset)
+        return wmdocklib.getCenterStartPos(s, letterWidth, width, xOffset)
 
     def getVertSpacing(self, numLines, margin):
-        return pywmhelpers.getVertSpacing(numLines, margin, height,
+        return wmdocklib.getVertSpacing(numLines, margin, height,
                                         letterHeight, yOffset)
 
     def getProgress(self, lines):
@@ -178,7 +178,7 @@ class PywmSeti:
         h = runningIndHeight
         targX = width - xOffset - w - 5
         targY = yOffset + 5
-        pywmhelpers.copyXPMArea(indX, indY, w, h, targX, targY)
+        wmdocklib.copyXPMArea(indX, indY, w, h, targX, targY)
 
     def updateRunning(self):
         '''Update the information regarding if we got seti@home running or not.
@@ -233,10 +233,10 @@ class PywmSeti:
         self._progress = progress
         percent = int(progress * 100.0)
         graphSize = int(round(progress * graphLength))
-        pywmhelpers.copyXPMArea(
+        wmdocklib.copyXPMArea(
             graphLineStartX, graphLineStartY, graphSize, graphHeight, 
             graphStartX, graphStartY)
-        pywmhelpers.copyXPMArea(
+        wmdocklib.copyXPMArea(
             graphBgStartX, graphBgStartY, graphLength - graphSize, graphHeight,
             graphStartX + graphSize, graphStartY)
         self.addString((str(percent) + '%').ljust(4), 4, 32)
@@ -289,15 +289,15 @@ class PywmSeti:
 
     def _checkForEvents(self):
         '''Check for, and handle, X events.'''
-        event = pywmhelpers.getEvent()
+        event = wmdocklib.getEvent()
         while not event is None:
             if event['type'] == 'buttonrelease':
-                region = pywmhelpers.checkMouseRegion(event['x'],
+                region = wmdocklib.checkMouseRegion(event['x'],
                                                       event['y'])
                 self.handleMouseClick(region)
             elif event['type'] == 'destroynotify':
                 sys.exit(0)
-            event = pywmhelpers.getEvent()
+            event = wmdocklib.getEvent()
 
     def mainLoop(self):
         counter = -1
@@ -313,7 +313,7 @@ class PywmSeti:
                 self.updateTime()
             if counter == 999999:
                 counter = -1
-            pywmhelpers.redraw()
+            wmdocklib.redraw()
             time.sleep(0.1)
         
 
@@ -378,17 +378,17 @@ def parseColors(defaultRGBFileNames, config, xpm):
         for key, value in colors:
             col = config.get(key)
             if not col is None:
-                code = pywmhelpers.getColorCode(col, rgbFileName)
+                code = wmdocklib.getColorCode(col, rgbFileName)
                 if code is None:
                     sys.stderr.write('Bad colorcode for %s, ignoring.\n' % key)
                 else:
-                    pywmhelpers.setColor(xpm, value, code)
+                    wmdocklib.setColor(xpm, value, code)
 
 def main():
     clConfig = parseCommandLine(sys.argv)
     configFile = clConfig.get('configfile', defaultConfigFile)
     configFile = os.path.expanduser(configFile)
-    fileConfig = pywmhelpers.readConfigFile(configFile, sys.stderr)
+    fileConfig = wmdocklib.readConfigFile(configFile, sys.stderr)
     # Merge the two configs, let the commandline options overwrite those in the
     # configuration file.
     config = fileConfig
@@ -423,9 +423,9 @@ def main():
     except IndexError:
         programName = ''
     sys.argv[0] = programName
-    pywmhelpers.setDefaultPixmap(xpm)
-    pywmhelpers.openXwindow(sys.argv, width, height)
-    pywmhelpers.addMouseRegion(0, xOffset, yOffset, width - 2 * xOffset,
+    wmdocklib.setDefaultPixmap(xpm)
+    wmdocklib.openXwindow(sys.argv, width, height)
+    wmdocklib.addMouseRegion(0, xOffset, yOffset, width - 2 * xOffset,
                                height - 2 * yOffset)
     pwms = PywmSeti(statePath, uinfoPath, pidPath, execCmd)
     pwms.mainLoop()

@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-'''pywmsysmon.py
+"""pywmsysmon.py
 
 WindowMaker system monitor dockapp written in Python. It displays your CPU
 usage and your available/used memory.
@@ -15,8 +15,8 @@ Fixed a bug which caused infinite loop if the mouse was clicked
 
 2003-06-24 Kristoffer Erlandsson
 First working version
-'''
-usage='''pywmsysmon.py [options]
+"""
+usage="""pywmsysmon.py [options]
 Available options are:
 -h, --help                      print this help
 -f, --barfgcolor <color>        set the foreground color of the memory bar
@@ -29,14 +29,14 @@ Available options are:
 -m, --procmeminfo <file>        set the location of /proc/meminfo
 -i, --ignorenice                ignore nice valued cpu usage
 -u, --updatedelay <value>       delay (in seconds) between cpu graph updates
-'''
+"""
 
 import sys
 import time
 import getopt
 import os
 
-from pywmgeneral import pywmhelpers
+from pywmgeneral import wmdocklib
 
 width = 64
 height = 64
@@ -103,10 +103,10 @@ class PywmSysMon:
         self._usageHistory.append(cpuUsage)
 
     def getMemInfo(self):
-        '''Get memory information.
+        """Get memory information.
          
         Return a tuple with (total_mem, used_mem, buffered_mem, cached_mem).
-        '''
+        """
         try:
             meminfoFile = file(self._procMeminfo, 'r')
         except IOError, e:
@@ -125,19 +125,19 @@ class PywmSysMon:
         return (total, used, buffers, cached)
 
     def freeMem(self, memData):
-        '''Take a tuple as returned from getMemInfo and return the free mem.
-        '''
+        """Take a tuple as returned from getMemInfo and return the free mem.
+        """
         total, used, buffers, cached = memData
         reallyUsed = used - buffers - cached
         free = total - reallyUsed
         return free
 
     def getCPUUsage(self):
-        '''Get the current CPU usage.
+        """Get the current CPU usage.
 
         Only works for systems where this can be found in a /proc/stat like
         file. Return the usage in percent.
-        '''
+        """
         try:
             statFile = file(self._procStat, 'r')
         except IOError, e:
@@ -161,7 +161,7 @@ class PywmSysMon:
 
     def addString(self, s, x, y):
         try:
-            pywmhelpers.addString(s, x, y, letterWidth, letterHeight,
+            wmdocklib.addString(s, x, y, letterWidth, letterHeight,
                         lettersStartX, lettersStartY, letters, digitWidth,
                         digitHeight, digitsStartX, digitsStartY, digits,
                         xOffset, yOffset, width, height)
@@ -170,29 +170,29 @@ class PywmSysMon:
             sys.exit(3)
 
     def paintGraph(self, percentFilled, x, y, w):
-        '''Paint a graph with percentFilled percent filled.
+        """Paint a graph with percentFilled percent filled.
 
         Paint at position x, y and with width w.
-        '''
+        """
         paintWidth = int(round(percentFilled/100.0 * w))
         if paintWidth > 0:
-            pywmhelpers.copyXPMArea(
+            wmdocklib.copyXPMArea(
                 hGraphLineStartX, hGraphLineStartY, paintWidth, hGraphHeight,
                 x, y)
         if w - paintWidth > 0:
-            pywmhelpers.copyXPMArea(
+            wmdocklib.copyXPMArea(
                 hGraphBgStartX, hGraphBgStartY, w - paintWidth, hGraphHeight,
                 x + paintWidth, y)
 
     def drawVertLine(self, sourceX, sourceY, targX, targY, length):
-        '''Draw a vertical line.
-        '''
+        """Draw a vertical line.
+        """
         if length > 0:
-            pywmhelpers.copyXPMArea(sourceX, sourceY, 1, length, targX, targY)
+            wmdocklib.copyXPMArea(sourceX, sourceY, 1, length, targX, targY)
 
     def drawCPUUsageHistory(self):
-        '''Draw the complete CPU usage graph according to what's in the history.
-        '''
+        """Draw the complete CPU usage graph according to what's in the history.
+        """
         count = 0
         for histItem in self._usageHistory:
             lengthFilled = int(round(vGraphHeight * (histItem/100.0)))
@@ -206,13 +206,13 @@ class PywmSysMon:
             count += 1
 
     def updateCPUInfo(self):
-        '''Update the current cpu usage graph.'''
+        """Update the current cpu usage graph."""
         currentUsage = self.getCPUUsage()
         self.addUsageToHist(currentUsage)
         self.drawCPUUsageHistory()
 
     def updateMemInfo(self):
-        '''Update the current memory usage graph.'''
+        """Update the current memory usage graph."""
         memInfo = self.getMemInfo()
         total = memInfo[0]
         free = self.freeMem(memInfo)
@@ -220,11 +220,11 @@ class PywmSysMon:
         self.paintGraph(percentUsed, hGraphStartX, hGraphStartY, hGraphWidth)
 
     def _checkForEvents(self):
-        event = pywmhelpers.getEvent()
+        event = wmdocklib.getEvent()
         while not event is None:
             if event['type'] == 'destroynotify':
                 sys.exit(0)
-            event = pywmhelpers.getEvent()
+            event = wmdocklib.getEvent()
 
     def mainLoop(self):
         counter = -1
@@ -237,11 +237,11 @@ class PywmSysMon:
                 self.updateMemInfo()
             if counter == 999999:
                 counter = -1
-            pywmhelpers.redraw()
+            wmdocklib.redraw()
             time.sleep(0.1)
 
 def parseCommandLine(argv):
-    '''Parse the commandline. Return a dictionary with options and values.'''
+    """Parse the commandline. Return a dictionary with options and values."""
     shorts = 'hf:g:b:p:a:r:s:m:iu:'
     longs = ['help=', 'barbgcolor=', 'barfgcolor=', 'background=',
              'graphforeground=', 'graphbackground=', 'rgbfile=', 'procstat=',
@@ -308,11 +308,11 @@ def parseColors(defaultRGBFileList, config, xpm):
         for key, value in colors:
             col = config.get(key)
             if not col is None:
-                code = pywmhelpers.getColorCode(col, rgbFileName)
+                code = wmdocklib.getColorCode(col, rgbFileName)
                 if code is None:
                     sys.stderr.write('Bad colorcode for %s, ignoring.\n' % key)
                 else:
-                    pywmhelpers.setColor(xpm, value, code)
+                    wmdocklib.setColor(xpm, value, code)
 
 
 
@@ -336,8 +336,8 @@ def main():
     except IndexError:
         programName = ''
     sys.argv[0] = programName
-    pywmhelpers.setDefaultPixmap(xpm)
-    pywmhelpers.openXwindow(sys.argv, width, height)
+    wmdocklib.setDefaultPixmap(xpm)
+    wmdocklib.openXwindow(sys.argv, width, height)
     pywmsysmon = PywmSysMon(procMeminfo, procStat, ignoreNice, updateDelay)
     pywmsysmon.mainLoop()
 

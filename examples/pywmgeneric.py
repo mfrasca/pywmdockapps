@@ -40,7 +40,7 @@ import ConfigParser
 import getopt
 import popen2
 
-from pywmgeneral import pywmhelpers
+import wmdocklib
 
 prevStat = {'user':0,
             'nice':0,
@@ -160,7 +160,7 @@ err = sys.stderr.write
 def addString(s, x, y):
     '''Convenience function around pwymhelpers.addString.'''
     try:
-        pywmhelpers.addString(s, x, y, letterWidth, letterHeight, lettersStartX,
+        wmdocklib.addString(s, x, y, letterWidth, letterHeight, lettersStartX,
                           lettersStartY, letters, digitWidth, digitHeight,
                           digitsStartX, digitsStartY, digits, xOffset, yOffset,
                           width, height)
@@ -170,7 +170,7 @@ def addString(s, x, y):
 
 def clearLine(y):
     '''Clear a line of text at position y.'''
-    pywmhelpers.copyXPMArea(72, yOffset, width - 2 * xOffset, letterHeight,
+    wmdocklib.copyXPMArea(72, yOffset, width - 2 * xOffset, letterHeight,
                             xOffset, y + yOffset)
 
 def getXY(line):
@@ -482,7 +482,7 @@ class PywmGeneric:
         for i in range(5):
             x, y = getXY(i)
             if not self._entrys[i] is None:
-                pywmhelpers.addMouseRegion(i, x + xOffset, y + yOffset,
+                wmdocklib.addMouseRegion(i, x + xOffset, y + yOffset,
                     width - 2 * xOffset, y + yOffset + letterHeight)
 
     def parseTimeStr(self, timeStr):
@@ -502,17 +502,17 @@ class PywmGeneric:
         raise ValueError, 'Invalid literal'
 
     def _checkForEvents(self):
-        event = pywmhelpers.getEvent()
+        event = wmdocklib.getEvent()
         while not event is None:
             if event['type'] == 'destroynotify':
                 sys.exit(0)
             elif event['type'] == 'buttonrelease':
-                region = pywmhelpers.checkMouseRegion(event['x'], event['y'])
+                region = wmdocklib.checkMouseRegion(event['x'], event['y'])
                 button = event['button']
                 if region != -1:
                     if not self._entrys[region] is None:
                         self._entrys[region].mouseClicked(button)
-            event = pywmhelpers.getEvent()
+            event = wmdocklib.getEvent()
 
     def mainLoop(self):
         counter = -1
@@ -526,7 +526,7 @@ class PywmGeneric:
 
             if counter == 999999:
                 counter = -1
-            pywmhelpers.redraw()
+            wmdocklib.redraw()
             time.sleep(0.5)
 
 def parseCommandLine(argv):
@@ -577,11 +577,11 @@ def parseColors(defaultRGBFileList, config, xpm):
         for key, value in colors:
             col = config.get(key)
             if not col is None:
-                code = pywmhelpers.getColorCode(col, rgbFileName)
+                code = wmdocklib.getColorCode(col, rgbFileName)
                 if code is None:
                     err('Bad colorcode for %s, ignoring.\n' % key)
                 else:
-                    pywmhelpers.setColor(xpm, value, code)
+                    wmdocklib.setColor(xpm, value, code)
 
 def readConfigFile(fileName):
     '''Read the config file.
@@ -622,8 +622,8 @@ def main():
     except IndexError:
         programName = ''
     sys.argv[0] = programName
-    pywmhelpers.setDefaultPixmap(xpm)
-    pywmhelpers.openXwindow(sys.argv, width, height)
+    wmdocklib.setDefaultPixmap(xpm)
+    wmdocklib.openXwindow(sys.argv, width, height)
     pywmgeneric = PywmGeneric(config)
     pywmgeneric.mainLoop()
 
