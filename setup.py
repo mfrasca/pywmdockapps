@@ -7,11 +7,11 @@ XIncludes = '/usr/X11R6/include'
 
 from distutils.core import setup, Extension
 
-module1 = Extension('pywmgeneral',
+module1 = Extension('wmdocklib.pywmgeneral',
                     libraries = ['Xpm', 'Xext', 'X11'],
                     library_dirs = [XLibDir],
                     include_dirs = [XIncludes],
-                    sources = ['pywmgeneral/pywmgeneral.c'])
+                    sources = ['wmdocklib/pywmgeneral.c'])
 
 setup(name="pywmdockapps",
       version = "$Revision$"[11:-2],
@@ -23,11 +23,11 @@ setup(name="pywmdockapps",
       author_email="mfrasca@zonnet.nl",
       url="http://ibo.sourceforge.net",
       license="(L)GPL",
-      py_modules=['pywmdatetime.pywmdatetime',
-                  'pywmgeneral.pywmhelpers',
-                  'pywmgeneric.pywmgeneric',
-                  'pywmhdmon.pywmhdmon',
-                  'pywmseti.pywmseti',
-                  'pywmsysmon.pywmsysmon',
-                  ],
+      packages=['wmdocklib',
+                ],
+      scripts=['examples/pywmdatetime.py',
+               'examples/pywmhdmon.py',
+               'examples/pywmseti.py',
+               'examples/pywmsysmon.py',
+               'examples/setup.py'],
       ext_modules = [module1])
