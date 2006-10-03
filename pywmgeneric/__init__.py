@@ -1,2 +1,2 @@
-from pywmgeneric import *
+from pywmgeneral import *
 from pywmhelpers import *
