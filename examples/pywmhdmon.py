@@ -250,10 +250,28 @@ class PywmHDMon:
             elif event['type'] == 'buttonrelease':
                 area = wmdocklib.checkMouseRegion(event['x'],event['y'])
                 if area is not -1:
-                    action = self._pathsToMonitor[area-1+self._skipping][3]
-                    if action:
-                        os.spawnvp(os.P_NOWAIT, action[0], action)
+                    self.toggleMount(area-1+self._skipping)
             event = wmdocklib.getEvent()
+
+    def toggleMount(self, line):
+        label, path, mode, action = self._pathsToMonitor[line]
+        if action is None:
+            return
+        try:
+            self.getHdInfo(path)
+            mounted = True
+        except NotMounted:
+            mounted = False
+        except OSError, e:
+            return
+        if mounted:
+            if action == 'mount':
+                os.spawnvp(os.P_NOWAIT, 'umount', ['umount', path])
+            elif action == 'eject':
+                os.spawnvp(os.P_WAIT, 'umount', ['umount', path])
+                os.spawnvp(os.P_NOWAIT, 'eject', ['eject', path])
+        else:
+            os.spawnvp(os.P_NOWAIT, 'mount', ['mount', path])
 
     def updateMonitoredPaths(self):
         index = 0
@@ -432,8 +450,9 @@ def main():
         label = config.get(labelStr)
         if not label: break
         path = config.get(pathStr)
-        action = config.get(actionStr)
-        if action: action=eval(action)
+        action = config.get(actionStr, 'fixed').lower().strip()
+        if action not in ['mount', 'eject']:
+            action = None
         displayMode = config.get(modeStr, defaultMode)
         if not displayMode in displayModes:
             sys.stderr.write(
