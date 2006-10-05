@@ -36,7 +36,7 @@ import time
 import getopt
 import os
 
-from pywmgeneral import wmdocklib
+import wmdocklib
 
 width = 64
 height = 64
@@ -112,16 +112,28 @@ class PywmSysMon:
         except IOError, e:
             sys.stderr.write("Can't open meminfo file: %s.\n" % str(e))
             sys.exit(2)
-        theLine = None
+        total = used = free = shared = buffers = cached = theLine = None
         for line in meminfoFile:
             if line.startswith('Mem:'):
                 theLine = line
-        if theLine is None:
+                break
+            if line.startswith('MemTotal:'):
+                total = long(line.split()[1])
+            if line.startswith('MemFree:'):
+                free = long(line.split()[1])
+            if line.startswith('Buffers:'):
+                buffers = long(line.split()[1])
+            if line.startswith('Cached:'):
+                cached = long(line.split()[1])
+        if free and total:
+            used = total - free
+        if theLine is not None:
+            parts = [long(x) for x in theLine.split()[1]]
+            total, used, free, shared, buffers, cached = parts[:6]
+        if None in [total, used, buffers, cached]:
             sys.stderr.write("Can't find memory information in %s.\n" % 
                 self._procMeminfo)
             sys.exit(4)
-        parts = [long(x) for x in theLine.split()[1:]]
-        total, used, free, shared, buffers, cached = parts
         return (total, used, buffers, cached)
 
     def freeMem(self, memData):
@@ -145,7 +157,7 @@ class PywmSysMon:
             sys.exit(2)
         line = statFile.readline()
         statFile.close()
-        cpu, nice, system, idle = [long(x) for x in line.split()[1:]]
+        cpu, nice, system, idle = [long(x) for x in line.split()[1:]][:4]
         used = cpu + system
         if not self._ignoreNice:
             used += nice
