@@ -38,8 +38,7 @@ import os
 
 import wmdocklib
 
-from wmdocklib import letters, lettersStartX, lettersStartY, letterWidth, letterHeight
-from wmdocklib import digits, digitsStartX, digitsStartY, digitWidth, digitHeight
+from wmdocklib import char_width, char_height
 
 width = 64
 height = 64
@@ -163,10 +162,7 @@ class PywmSysMon:
 
     def addString(self, s, x, y):
         try:
-            wmdocklib.addString(s, x, y, letterWidth, letterHeight,
-                        lettersStartX, lettersStartY, letters, digitWidth,
-                        digitHeight, digitsStartX, digitsStartY, digits,
-                        xOffset, yOffset, width, height)
+            wmdocklib.addString(s, x, y, digits, xOffset, yOffset, width, height)
         except ValueError, e:
             sys.stderr.write('Error when painting string:\n' + str(e) + '\n')
             sys.exit(3)
@@ -425,7 +421,7 @@ xpm = \
  '                                                                 .///////////////////////////////////////////////////////////////////////////////////////////...',
  '                                                                 ...............................................................................................',
  '                                                                 ...............................................................................................',
- ] + wmdocklib.alfabet
+ ] + wmdocklib.char_map
 
 
 if __name__ == '__main__':

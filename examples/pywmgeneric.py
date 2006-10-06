@@ -42,8 +42,7 @@ import popen2
 
 import wmdocklib
 
-from wmdocklib import letters, lettersStartX, lettersStartY, letterWidth, letterHeight
-from wmdocklib import digits, digitsStartX, digitsStartY, digitWidth, digitHeight
+from wmdocklib import char_width, char_height
 
 prevStat = {'user':0,
             'nice':0,
@@ -150,22 +149,20 @@ err = sys.stderr.write
 def addString(s, x, y):
     """Convenience function around pwymhelpers.addString."""
     try:
-        wmdocklib.addString(s, x, y, letterWidth, letterHeight, lettersStartX,
-                          lettersStartY, letters, digitWidth, digitHeight,
-                          digitsStartX, digitsStartY, digits, xOffset, yOffset,
-                          width, height)
+        wmdocklib.addString(s, x, y, xOffset, yOffset,
+                            width, height)
     except ValueError, e:
         sys.stderr.write('Error when painting string:\n' + str(e) + '\n')
         sys.exit(3)
 
 def clearLine(y):
     """Clear a line of text at position y."""
-    wmdocklib.copyXPMArea(72, yOffset, width - 2 * xOffset, letterHeight,
+    wmdocklib.copyXPMArea(72, yOffset, width - 2 * xOffset, char_height,
                             xOffset, y + yOffset)
 
 def getXY(line):
     """Return the x and y positions to be used at line line."""
-    return 0, line * (letterHeight + 3) + 1
+    return 0, line * (char_height + 3) + 1
 
 def isTrue(s):
     """Return true if the string s can be interpreted as a true value.
@@ -473,7 +470,7 @@ class PywmGeneric:
             x, y = getXY(i)
             if not self._entrys[i] is None:
                 wmdocklib.addMouseRegion(i, x + xOffset, y + yOffset,
-                    width - 2 * xOffset, y + yOffset + letterHeight)
+                    width - 2 * xOffset, y + yOffset + char_height)
 
     def parseTimeStr(self, timeStr):
         """Take a string on a form like 10h and return the number of seconds.
@@ -696,7 +693,7 @@ xpm = \
  '                                                                 .///////////////////////////////////////////////////////////////////////////////////////////...',
  '                                                                 ...............................................................................................',
  '                                                                 ...............................................................................................',
- ] + wmdocklib.alfabet
+ ] + wmdocklib.char_map
 
 if __name__ == '__main__':
     main()

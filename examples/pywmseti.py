@@ -39,8 +39,7 @@ import os
 
 import wmdocklib
 
-from wmdocklib import letters, lettersStartX, lettersStartY, letterWidth, letterHeight
-from wmdocklib import digits, digitsStartX, digitsStartY, digitWidth, digitHeight
+from wmdocklib import char_width, char_height
 
 width = 64
 height = 64
@@ -86,20 +85,17 @@ class PywmSeti:
         
     def addString(self, s, x, y):
         try:
-            wmdocklib.addString(s, x, y, letterWidth, letterHeight,
-                        lettersStartX, lettersStartY, letters, digitWidth,
-                        digitHeight, digitsStartX, digitsStartY, digits,
+            wmdocklib.addString(s, x, y, digits,
                         xOffset, yOffset, width, height)
         except ValueError, e:
             sys.stderr.write('Error when painting string:\n' + str(e) + '\n')
             sys.exit(3)
 
     def getCenterStartPos(self, s):
-        return wmdocklib.getCenterStartPos(s, letterWidth, width, xOffset)
+        return wmdocklib.getCenterStartPos(s, width, xOffset)
 
     def getVertSpacing(self, numLines, margin):
-        return wmdocklib.getVertSpacing(numLines, margin, height,
-                                        letterHeight, yOffset)
+        return wmdocklib.getVertSpacing(numLines, margin, height, yOffset)
 
     def getProgress(self, lines):
         """Return the progess of the current workunit.
@@ -499,7 +495,7 @@ xpm = \
  '                                                                 .///////////////////////////////////////////////////////////////////////////////////////////...',
  '                                                                 ...............................................................................................',
  '                                                                 ...............................................................................................',
- ] + wmdocklib.alfabet
+ ] + wmdocklib.char_map
 
 
 if __name__ == '__main__':

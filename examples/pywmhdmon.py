@@ -57,8 +57,7 @@ import os
 
 import wmdocklib
 
-from wmdocklib import letters, lettersStartX, lettersStartY, letterWidth, letterHeight
-from wmdocklib import digits, digitsStartX, digitsStartY, digitWidth, digitHeight
+from wmdocklib import char_width, char_height
 
 width = 64
 height = 64
@@ -99,10 +98,7 @@ class PywmHDMon:
 
     def addString(self, s, x, y):
         try:
-            wmdocklib.addString(s, x, y, letterWidth, letterHeight,
-                                lettersStartX, lettersStartY, letters, digitWidth,
-                                digitHeight, digitsStartX, digitsStartY, digits,
-                                xOffset, yOffset, width, height)
+            wmdocklib.addString(s, x, y, xOffset, yOffset, width, height)
         except ValueError, e:
             sys.stderr.write('Error when painting string:\n' + str(e) + '\n')
             sys.exit(3)
@@ -151,14 +147,14 @@ class PywmHDMon:
                 x + paintWidth + xOffset, y + yOffset)
 
     def getY(self, line):
-        return 2 + (line - 1) * (letterHeight + 3)
+        return 2 + (line - 1) * (char_height + 3)
 
     def paintLabel(self, line, label):
         self.addString(label, 1, self.getY(line))
 
     def paintHdData(self, line, data, mode):
         total, free = data
-        xStart = width - xOffset - 6 * letterWidth - 1
+        xStart = width - xOffset - 6 * char_width - 1
         if total==0:
             self.addString('     ', xStart, self.getY(line))
             self.paintGraph(0, xStart, self.getY(line) + 4, 
@@ -450,8 +446,8 @@ def main():
             displayMode = defaultMode
         pathsToMonitor.append((label[:3], path, displayMode, action))
         wmdocklib.addMouseRegion(i,
-                                   8, 8 + (i - 1) * (letterHeight + 3),
-                                   58, 4 + i * (letterHeight + 3))
+                                   8, 8 + (i - 1) * (char_height + 3),
+                                   58, 4 + i * (char_height + 3))
     procStat = config.get('procstat', defaultProcStat)
     skipping = int(config.get('skipconf', 0))
     actMonEnabled = int(config.get('monitoring'))
@@ -555,7 +551,7 @@ xpm = \
  '                                                                 .///////////////////////////////////////////////////////////////////////////////////////////...',
  '                                                                 ...............................................................................................',
  '                                                                 ...............................................................................................',
- ] + wmdocklib.alfabet
+ ] + wmdocklib.char_map
 
 if __name__ == '__main__':
     main()
