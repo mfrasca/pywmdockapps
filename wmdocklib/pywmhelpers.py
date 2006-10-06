@@ -88,7 +88,11 @@ def addChar(ch, x, y, xOffset, yOffset, width, height):
     targY = y + yOffset
     if targX + char_width > width - xOffset or targY + char_height > height - yOffset\
             or targX < 0 or targY < 0:
-        raise ValueError, "Out of bounds."
+        raise ValueError, "Out of bounds. %s %s %s %s" % (
+            targX + char_width > width - xOffset,
+            targY + char_height > height - yOffset,
+            targX < 0,
+            targY < 0)
     pywmgeneral.copyXPMArea(chX, chY, char_width, char_height, targX, targY)
     return (char_width, char_height)
 
@@ -106,7 +110,7 @@ def getVertSpacing(numLines, margin, height, yOffset):
     """Return the optimal spacing between a number of lines.
     
     margin is the space we want between the first line and the top."""
-    h = height - numLines * char_height - yOffset * 2 - margin
+    h = height - (numLines * char_height + 1) - yOffset * 2 - margin
     return h / (numLines - 1)
 
 

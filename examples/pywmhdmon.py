@@ -147,7 +147,7 @@ class PywmHDMon:
                 x + paintWidth + xOffset, y + yOffset)
 
     def getY(self, line):
-        return 2 + (line - 1) * (char_height + 3)
+        return 2 + (line - 1) * (char_height + 1)
 
     def paintLabel(self, line, label):
         self.addString(label, 1, self.getY(line))
@@ -446,8 +446,8 @@ def main():
             displayMode = defaultMode
         pathsToMonitor.append((label[:3], path, displayMode, action))
         wmdocklib.addMouseRegion(i,
-                                   8, 8 + (i - 1) * (char_height + 3),
-                                   58, 4 + i * (char_height + 3))
+                                   8, 8 + (i - 1) * (char_height + 1),
+                                   58, 4 + i * (char_height + 1))
     procStat = config.get('procstat', defaultProcStat)
     skipping = int(config.get('skipconf', 0))
     actMonEnabled = int(config.get('monitoring'))
