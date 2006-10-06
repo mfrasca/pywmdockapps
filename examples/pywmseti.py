@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-'''pywmseti.py
+"""pywmseti.py
 
 WindowMaker dockapp to monitor the progress of your seti@home.
 
@@ -17,8 +17,8 @@ Added event handling for graceful shutdown
 2003-06-17 Kristoffer Erlandsson
 First workingish version
 
-'''
-usage = '''pywmseti.py [options]
+"""
+usage = """pywmseti.py [options]
 Available options are:
 -h, --help                      print this help
 -t, --textcolor <color>         set the text color
@@ -30,7 +30,7 @@ Available options are:
 -n, --nice <value>              set the nice value to run seti@home with
 -r, --rgbfile <file>            set the rgb file to get color codes from
 -c, --configfile <file>         set the config file to use
-'''
+"""
 
 import sys
 import time
@@ -39,21 +39,14 @@ import os
 
 import wmdocklib
 
+from wmdocklib import letters, lettersStartX, lettersStartY, letterWidth, letterHeight
+from wmdocklib import digits, digitsStartX, digitsStartY, digitWidth, digitHeight
+
 width = 64
 height = 64
 
 xOffset = 4
 yOffset = 4
-
-lettersStartX = 0
-lettersStartY = 74
-letterWidth = 6
-letterHeight = 8
-
-digitsStartX = 0
-digitsStartY = 64
-digitWidth = 6
-digitHeight = 8
 
 graphStartX = 7
 graphStartY = 53
@@ -71,9 +64,6 @@ runningIndY = 1
 runningIndWidth = 3
 runningIndHeight = 15
 numRunningInds = 4
-
-letters = 'abcdefghijklmnopqrstuvwxyz'
-digits = '0123456789:/-% '
 
 defaultConfigFile = '~/.pywmsetirc'
 defaultRGBFiles = ['/usr/lib/X11/rgb.txt', '/usr/X11R6/lib/X11/rgb.txt']
@@ -112,10 +102,10 @@ class PywmSeti:
                                         letterHeight, yOffset)
 
     def getProgress(self, lines):
-        '''Return the progess of the current workunit.
+        """Return the progess of the current workunit.
          
         Supply the lines of the statefile as argument.
-        '''
+        """
         for line in lines:
             if line.startswith('prog='):
                 try:
@@ -126,10 +116,10 @@ class PywmSeti:
         return 0
 
     def getNumResults(self, lines):
-        '''Return the number of results produced.
+        """Return the number of results produced.
          
         Supply the lines in the user info file as argument.
-        '''
+        """
         for line in lines:
             if line.startswith('nresults='):
                 try:
@@ -143,14 +133,14 @@ class PywmSeti:
         return -1
 
     def pidIsRunning(self, pid):
-        '''Determine if the process with PID pid is running.
+        """Determine if the process with PID pid is running.
     
         Return 1 if it is running.
         Return 0 if it is not running.
         Return -1 if we do not have permission to signal the process
         This could be slightly non-portal, but I can not find any better
         way to do it.
-        '''
+        """
         try:
             os.kill(pid, 0)
         except OSError, e:
@@ -169,8 +159,8 @@ class PywmSeti:
 
 
     def paintCurrentRunningIndicator(self):
-        '''Paint the running indicator.
-        '''
+        """Paint the running indicator.
+        """
         indX = runningIndX + self._currentRunningInd * \
                              (runningIndWidth + 2)
         indY = runningIndY
@@ -181,12 +171,12 @@ class PywmSeti:
         wmdocklib.copyXPMArea(indX, indY, w, h, targX, targY)
 
     def updateRunning(self):
-        '''Update the information regarding if we got seti@home running or not.
+        """Update the information regarding if we got seti@home running or not.
 
         Return a tuple with (running, startStopenabled).
         startStopEnabled is 1 if we own the process and got the permissions
         to start and stop it, or if there is no process running.
-        '''
+        """
         pidFile = self.openFileRead(self._pidPath)
         if pidFile is None:
             sys.stderr.write("Can't read pid file")
@@ -222,7 +212,7 @@ class PywmSeti:
         self.paintCurrentRunningIndicator()
 
     def updateProgress(self):
-        '''Update the progress on the current workunit.'''
+        """Update the progress on the current workunit."""
         stateFile = self.openFileRead(self._statePath)
         if stateFile is None:
             # Can't open file, probably in progress of gettin a new workunit.
@@ -242,7 +232,7 @@ class PywmSeti:
         self.addString((str(percent) + '%').ljust(4), 4, 32)
 
     def updateNumResults(self):
-        '''Update the number of workunits done.'''
+        """Update the number of workunits done."""
         uinfoFile = self.openFileRead(self._uinfoPath)
         numResults = self.getNumResults(uinfoFile.readlines())
         if self._lastNumResults == -1:
@@ -259,11 +249,11 @@ class PywmSeti:
         self.addString(str(numResults)[:7], 4, 4) 
 
     def updateTime(self):
-        '''Update the time line.
+        """Update the time line.
 
         We display the time that we have been on the current work unit, since
         either the last one was done or since we started the program.
-        '''
+        """
         timeSpent = time.time() - self._lastTime
         hours = int(timeSpent / 3600)
         mins = int((timeSpent - hours * 3600) / 60)
@@ -288,7 +278,7 @@ class PywmSeti:
                     os.system(self._execCmd)  # Use fork instead?
 
     def _checkForEvents(self):
-        '''Check for, and handle, X events.'''
+        """Check for, and handle, X events."""
         event = wmdocklib.getEvent()
         while not event is None:
             if event['type'] == 'buttonrelease':
@@ -318,7 +308,7 @@ class PywmSeti:
         
 
 def parseCommandLine(argv):
-    '''Parse the commandline. Return a dictionary with options and values.'''
+    """Parse the commandline. Return a dictionary with options and values."""
     shorts = 'ht:b:n:d:r:c:p:g:i:'
     longs = ['help', 'textcolor=', 'background=', 'setidir=', 'nice=',
              'rgbfile=', 'configfile=', 'progressbarcolor=', 'barbgcolor=',
@@ -443,108 +433,73 @@ xpm = \
  'o\tc #2020b2b2aaaa s indicator',
  '/\tc #2020b2b2aaaa s graph',
  '-\tc #707070707070 s graphbg',
- 'X\tc #000000000000 s background',
+ '_\tc #000000000000 s background',
  '%\tc #2081B2CAAEBA s text',
  '                                                                 ...............................................................................................',
- '                                                                 .///..XXX..ooo..XXX..XXX.......................................................................',
- '                                                                 .///..XXX..ooo..XXX..XXX.......................................................................',
- '                                                                 .///..XXX..ooo..XXX..XXX.......................................................................',
- '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX     .///..XXX..XXX..XXX..XXX.......................................................................',
- '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX     .///..XXX..XXX..XXX..XXX.......................................................................',
- '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX     .///..XXX..XXX..XXX..XXX.......................................................................',
- '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX     .///..XXX..XXX..ooo..XXX.......................................................................',
- '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX     .///..XXX..XXX..ooo..XXX.......................................................................',
- '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX     .///..XXX..XXX..ooo..XXX.......................................................................',
- '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX     .///..XXX..XXX..XXX..XXX.......................................................................',
- '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX     .///..XXX..XXX..XXX..XXX.......................................................................',
- '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX     .///..XXX..XXX..XXX..XXX.......................................................................',
- '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX     .///..XXX..XXX..XXX..ooo.......................................................................',
- '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX     .///..XXX..XXX..XXX..ooo.......................................................................',
- '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX     .///..XXX..XXX..XXX..ooo.......................................................................',
- '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX     .///...........................................................................................',
- '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX     .///...........................................................................................',
- '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX     .///...........................................................................................',
- '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX     .///...........................................................................................',
- '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX     .///...........................................................................................',
- '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX     .///...........................................................................................',
- '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX     .///...........................................................................................',
- '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX     .///...........................................................................................',
- '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX     .///...........................................................................................',
- '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX     .///...........................................................................................',
- '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX     .///...........................................................................................',
- '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX     .///...........................................................................................',
- '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX     .///...........................................................................................',
- '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX     .///...........................................................................................',
- '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX     .///...........................................................................................',
- '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX     .///...........................................................................................',
- '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX     .///...........................................................................................',
- '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX     .///...........................................................................................',
- '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX     .///...........................................................................................',
- '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX     .///...........................................................................................',
- '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX     .///...........................................................................................',
- '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX     .///...........................................................................................',
- '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX     .///...........................................................................................',
- '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX     .///...........................................................................................',
- '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX     .///...........................................................................................',
- '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX     .///...........................................................................................',
- '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX     .///...........................................................................................',
- '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX     .///...........................................................................................',
- '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX     .///...........................................................................................',
- '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX     .///...........................................................................................',
- '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX     .///...........................................................................................',
- '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX     .///...........................................................................................',
- '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX     .///...........................................................................................',
- '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX     .///...........................................................................................',
- '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX     .///...........................................................................................',
- '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX     .///...........................................................................................',
- '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX     .///...........................................................................................',
- '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX     .///...-------------------------------------------------------------------------------------...',
- '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX     .///...-------------------------------------------------------------------------------------...',
- '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX     .///...-------------------------------------------------------------------------------------...',
- '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX     .///...-------------------------------------------------------------------------------------...',
- '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX     .///...........................................................................................',
- '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX     .///////////////////////////////////////////////////////////////////////////////////////////...',
- '    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX     .///////////////////////////////////////////////////////////////////////////////////////////...',
+ '                                                                 .///..___..ooo..___..___.......................................................................',
+ '                                                                 .///..___..ooo..___..___.......................................................................',
+ '                                                                 .///..___..ooo..___..___.......................................................................',
+ '    ________________________________________________________     .///..___..___..___..___.......................................................................',
+ '    ________________________________________________________     .///..___..___..___..___.......................................................................',
+ '    ________________________________________________________     .///..___..___..___..___.......................................................................',
+ '    ________________________________________________________     .///..___..___..ooo..___.......................................................................',
+ '    ________________________________________________________     .///..___..___..ooo..___.......................................................................',
+ '    ________________________________________________________     .///..___..___..ooo..___.......................................................................',
+ '    ________________________________________________________     .///..___..___..___..___.......................................................................',
+ '    ________________________________________________________     .///..___..___..___..___.......................................................................',
+ '    ________________________________________________________     .///..___..___..___..___.......................................................................',
+ '    ________________________________________________________     .///..___..___..___..ooo.......................................................................',
+ '    ________________________________________________________     .///..___..___..___..ooo.......................................................................',
+ '    ________________________________________________________     .///..___..___..___..ooo.......................................................................',
+ '    ________________________________________________________     .///...........................................................................................',
+ '    ________________________________________________________     .///...........................................................................................',
+ '    ________________________________________________________     .///...........................................................................................',
+ '    ________________________________________________________     .///...........................................................................................',
+ '    ________________________________________________________     .///...........................................................................................',
+ '    ________________________________________________________     .///...........................................................................................',
+ '    ________________________________________________________     .///...........................................................................................',
+ '    ________________________________________________________     .///...........................................................................................',
+ '    ________________________________________________________     .///...........................................................................................',
+ '    ________________________________________________________     .///...........................................................................................',
+ '    ________________________________________________________     .///...........................................................................................',
+ '    ________________________________________________________     .///...........................................................................................',
+ '    ________________________________________________________     .///...........................................................................................',
+ '    ________________________________________________________     .///...........................................................................................',
+ '    ________________________________________________________     .///...........................................................................................',
+ '    ________________________________________________________     .///...........................................................................................',
+ '    ________________________________________________________     .///...........................................................................................',
+ '    ________________________________________________________     .///...........................................................................................',
+ '    ________________________________________________________     .///...........................................................................................',
+ '    ________________________________________________________     .///...........................................................................................',
+ '    ________________________________________________________     .///...........................................................................................',
+ '    ________________________________________________________     .///...........................................................................................',
+ '    ________________________________________________________     .///...........................................................................................',
+ '    ________________________________________________________     .///...........................................................................................',
+ '    ________________________________________________________     .///...........................................................................................',
+ '    ________________________________________________________     .///...........................................................................................',
+ '    ________________________________________________________     .///...........................................................................................',
+ '    ________________________________________________________     .///...........................................................................................',
+ '    ________________________________________________________     .///...........................................................................................',
+ '    ________________________________________________________     .///...........................................................................................',
+ '    ________________________________________________________     .///...........................................................................................',
+ '    ________________________________________________________     .///...........................................................................................',
+ '    ________________________________________________________     .///...........................................................................................',
+ '    ________________________________________________________     .///...........................................................................................',
+ '    ________________________________________________________     .///...........................................................................................',
+ '    ________________________________________________________     .///...........................................................................................',
+ '    ________________________________________________________     .///...........................................................................................',
+ '    ________________________________________________________     .///...-------------------------------------------------------------------------------------...',
+ '    ________________________________________________________     .///...-------------------------------------------------------------------------------------...',
+ '    ________________________________________________________     .///...-------------------------------------------------------------------------------------...',
+ '    ________________________________________________________     .///...-------------------------------------------------------------------------------------...',
+ '    ________________________________________________________     .///...........................................................................................',
+ '    ________________________________________________________     .///////////////////////////////////////////////////////////////////////////////////////////...',
+ '    ________________________________________________________     .///////////////////////////////////////////////////////////////////////////////////////////...',
  '                                                                 .///////////////////////////////////////////////////////////////////////////////////////////...',
  '                                                                 .///////////////////////////////////////////////////////////////////////////////////////////...',
  '                                                                 ...............................................................................................',
  '                                                                 ...............................................................................................',
- 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX............................',
- 'X%%%%%XXX%XXX%%%%%X%%%%%X%XXX%X%%%%%X%%%%%X%%%%%X%%%%%X%%%%%XXXXXXXXXX%XXXXXXXXXX%X%XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX............................',
- 'X%XXX%XX%%XXXXXXX%XXXXX%X%XXX%X%XXXXX%XXXXXXXXX%X%XXX%X%XXX%XX%%XXXXXX%XXXXXXXXXXXX%XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX............................',
- 'X%XXX%XXX%XXXXXXX%XXXXX%X%XXX%X%XXXXX%XXXXXXXXX%X%XXX%X%XXX%XX%%XXXXX%%XXXXXXXXXXX%%XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX............................',
- 'X%XXX%XXX%XXX%%%%%XX%%%%X%%%%%X%%%%%X%%%%%XXXXX%X%%%%%X%%%%%XXXXXXXXX%XXX%%%%%XXXX%XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX............................',
- 'X%XXX%XXX%XXX%XXXXXXXXX%XXXXX%XXXXX%X%XXX%XXXXX%X%XXX%XXXXX%XXXXXXXX%%XXXXXXXXXXX%%XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX............................',
- 'X%XXX%XXX%XXX%XXXXXXXXX%XXXXX%XXXXX%X%XXX%XXXXX%X%XXX%XXXXX%XX%%XXXX%XXXXXXXXXXXX%XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX............................',
- 'X%%%%%XX%%%XX%%%%%X%%%%%XXXXX%X%%%%%X%%%%%XXXXX%X%%%%%X%%%%%XX%%XXXX%XXXXXXXXXXXX%X%XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX............................',
- 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX............................',
- '................................................................................................................................................................',
- 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
- 'XX%%%XX%%%%XXX%%%%X%%%%XX%%%%XX%%%%%X%%%%%X%XXX%XXX%XXXXXXX%X%XXX%X%XXXXX%XXX%X%%%%XX%%%%%X%%%%%X%%%%%X%%%%%X%%%%%X%%%%%X%XXX%X%XXX%X%XXX%X%XXX%X%XXX%X%%%%%XXXX',
- 'X%XXX%X%XXX%X%XXXXX%XXX%X%XXXXX%XXXXX%XXXXX%XXX%XXX%XXXXXXX%X%XXX%X%XXXXX%%X%%X%XXX%X%XXX%X%XXX%X%XXX%X%XXX%X%XXXXXXX%XXX%XXX%X%XXX%X%XXX%X%XXX%X%XXX%XXXXX%XXXX',
- 'X%XXX%X%XXX%X%XXXXX%XXX%X%XXXXX%XXXXX%XXXXX%XXX%XXX%XXXXXXX%X%XX%XX%XXXXX%X%X%X%XXX%X%XXX%X%XXX%X%XXX%X%XXX%X%XXXXXXX%XXX%XXX%X%XXX%X%XXX%XX%X%XX%XXX%XXXX%XXXXX',
- 'X%%%%%X%%%%XX%XXXXX%XXX%X%%%%XX%%%%XX%X%%%X%%%%%XXX%XXXXXXX%X%%%XXX%XXXXX%XXX%X%XXX%X%XXX%X%%%%%X%%XX%X%%%%XX%%%%%XXX%XXX%XXX%X%XXX%X%XXX%XXX%XXX%%%%%XXX%XXXXXX',
- 'X%XXX%X%XXX%X%XXXXX%XXX%X%XXXXX%XXXXX%XXX%X%XXX%XXX%XXXXXXX%X%XX%XX%XXXXX%XXX%X%XXX%X%XXX%X%XXXXX%X%X%X%XXX%XXXXX%XXX%XXX%XXX%X%XXX%X%X%X%XX%X%XXXXXX%XX%XXXXXXX',
- 'X%XXX%X%XXX%X%XXXXX%XXX%X%XXXXX%XXXXX%XXX%X%XXX%XXX%XXX%XXX%X%XXX%X%XXXXX%XXX%X%XXX%X%XXX%X%XXXXX%XX%%X%XXX%XXXXX%XXX%XXX%XXX%X%XXX%X%%X%%X%XXX%XXXXX%X%XXXXXXXX',
- 'X%XXX%X%%%%XXX%%%%X%%%%XX%%%%XX%XXXXX%%%%%X%XXX%XXX%XXXX%%%XX%XXX%X%%%%XX%XXX%X%XXX%X%%%%%X%XXXXX%%%%%X%XXX%X%%%%%XXX%XXXX%%%%XX%%%XX%XXX%X%XXX%X%%%%%X%%%%%XXXX',
- 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
- '................................................................................................................................................................',
- '................................................................................................................................................................',
- '................................................................................................................................................................',
- '................................................................................................................................................................',
- '................................................................................................................................................................',
- '................................................................................................................................................................',
- '................................................................................................................................................................',
- '................................................................................................................................................................',
- '................................................................................................................................................................',
- '................................................................................................................................................................',
- '................................................................................................................................................................',
- '................................................................................................................................................................',
- '................................................................................................................................................................',
- '................................................................................................................................................................',
- '................................................................................................................................................................',
- '................................................................................................................................................................',
- '................................................................................................................................................................']
+ ] + wmdocklib.alfabet
 
 
 if __name__ == '__main__':
