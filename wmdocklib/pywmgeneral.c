@@ -47,19 +47,19 @@
  /* X11 Variables */
 /*****************/
 
-Window        Root;
-int            screen;
-int            x_fd;
-int            d_depth;
-XSizeHints    mysizehints;
-XWMHints    mywmhints;
+Window       Root;
+int          screen;
+int          x_fd;
+int          d_depth;
+XSizeHints   mysizehints;
+XWMHints     mywmhints;
 Pixel        back_pix, fore_pix;
 char        *Geometry = "";
-Window        iconwin, win;
-GC            NormalGC;
-XpmIcon        wmgen;
-Pixmap        pixmask;
-Atom        deleteAtom; /* Added 2003-06-24 for graceful shutdown. */
+Window       iconwin, win;
+GC           NormalGC;
+XpmIcon      wmgen;
+Pixmap       pixmask;
+Atom         deleteAtom; /* Added 2003-06-24 for graceful shutdown. */
 
 /*****************************************************************************/
 /* The Python stuff                                                          */ 
@@ -476,19 +476,19 @@ void setMaskXY(int x, int y) {
 \*******************************************************************************/
 void openXwindow(int argc, char *argv[], char *pixmap_bytes[], char *pixmask_bits, int pixmask_width, int pixmask_height) {
 
-    unsigned int    borderwidth = 1;
-    XClassHint        classHint;
-    char            *display_name = NULL;
-    char            *wname = argv[0];
-    XTextProperty    name;
+    unsigned int   borderwidth = 1;
+    XClassHint     classHint;
+    char          *display_name = NULL;
+    char          *wname = argv[0];
+    XTextProperty  name;
 
-    XGCValues        gcv;
-    unsigned long    gcm;
+    XGCValues      gcv;
+    unsigned long  gcm;
 
-    char            *geometry = NULL;
+    char          *geometry = NULL;
 
-    int                dummy=0;
-    int                i, wx, wy;
+    int            dummy=0;
+    int            i, wx, wy;
 
     /* Changed to work better with Python. Changed check in for loop to control
      * argc instead of argv.
