@@ -29,5 +29,5 @@ setup(name="pywmdockapps",
                'examples/pywmhdmon.py',
                'examples/pywmseti.py',
                'examples/pywmsysmon.py',
-               'examples/tmount'],
+               'examples/pywmgeneric.py'],
       ext_modules = [module1])
