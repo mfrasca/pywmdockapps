@@ -157,6 +157,7 @@ def initPixmap(xpm_background=None,
                font_name='6x8',
                bg='0', fg='7',
                width=64, height=64,
+               margin=3,
                palette=None):
     """builds and sets the pixmap of the program. 
 
@@ -218,11 +219,11 @@ def initPixmap(xpm_background=None,
         '%x\tc %s s %s' % (k, v[0], v[-1])
         for k,v in palette.items()
         ] + [
-        '0'*64 + item for item in xpm_background[:3]
+        '0'*width + item for item in xpm_background[:margin]
         ] + [
-        '000'+bg*(64-8)+'00000' + item for item in xpm_background[3:-4]
+        '0'*margin+bg*(width-margin-margin-2)+'0'*(margin+2) + item for item in xpm_background[margin:-margin-1]
         ] + [
-        '0'*64 + item for item in xpm_background[-4:]
+        '0'*width + item for item in xpm_background[-margin-1:]
         ] + [
         line.replace('%', fg).replace(' ', bg)
         for line in char_map
