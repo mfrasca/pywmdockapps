@@ -219,11 +219,11 @@ def initPixmap(xpm_background=None,
         '%x\tc %s s %s' % (k, v[0], v[-1])
         for k,v in palette.items()
         ] + [
-        '0'*width + item for item in xpm_background[:margin]
+        '0'*width + item[:128-width] for item in xpm_background[:margin]
         ] + [
-        '0'*margin+bg*(width-margin-margin-2)+'0'*(margin+2) + item for item in xpm_background[margin:-margin-1]
+        '0'*margin+bg*(width-margin-margin-2)+'0'*(margin+2) + item[:128-width] for item in xpm_background[margin:-margin-1]
         ] + [
-        '0'*width + item for item in xpm_background[-margin-1:]
+        '0'*width + item[:128-width] for item in xpm_background[-margin-1:]
         ] + [
         line.replace('%', fg).replace(' ', bg)
         for line in char_map
