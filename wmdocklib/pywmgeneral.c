@@ -285,7 +285,7 @@ static void GetXPM(XpmIcon *wmgen, char *pixmap_bytes[]) {
                     &(wmgen->mask), &(wmgen->attributes));
     
     if (err != XpmSuccess) {
-        fprintf(stderr, "Not enough free colorcells.\n");
+      fprintf(stderr, "Not enough free colorcells. %d\n", err);
         exit(1);
     }
 }
