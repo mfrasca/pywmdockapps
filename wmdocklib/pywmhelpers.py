@@ -220,9 +220,9 @@ def initPixmap(xpm_background=None,
         ] + [
         '0'*64 + item for item in xpm_background[:3]
         ] + [
-        '000'+bg*(64-6)+'000' + item for item in xpm_background[3:-3]
+        '000'+bg*(64-8)+'00000' + item for item in xpm_background[3:-4]
         ] + [
-        '0'*64 + item for item in xpm_background[-3:]
+        '0'*64 + item for item in xpm_background[-4:]
         ] + [
         line.replace('%', fg).replace(' ', bg)
         for line in char_map
