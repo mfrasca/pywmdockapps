@@ -180,7 +180,8 @@ def initPixmap(xpm_background=None,
     """
 
     if xpm_background is None:
-        xpm_background = ['0'*width]*2 + ['00'+bg*(width-4)+'00']*(height-4) + ['0'*width]*2
+        #xpm_background = ['0'*width]*4 + ['0000'+bg*(width-8)+'0000']*(height-8) + ['0'*width]*4
+        xpm_background = [bg*width]*height
     if palette is None:
         palette = {
             0: ('#000000','transparent'),
@@ -191,7 +192,7 @@ def initPixmap(xpm_background=None,
             5: ('#800000','red'),
             6: ('#800080','purple'),
             7: ('#c0c0c0','light_gray'),
-            8: ('#010101','black'),
+            8: ('#000000','black'),
             9: ('#0000ff','light_blue'),
             10: ('#00ffff','light_cyan'),
             11: ('#00ff00','light_green'),
@@ -217,7 +218,11 @@ def initPixmap(xpm_background=None,
         '%x\tc %s s %s' % (k, v[0], v[-1])
         for k,v in palette.items()
         ] + [
-        bg*64 + item for item in xpm_background
+        '0'*64 + item for item in xpm_background[:3]
+        ] + [
+        '000'+bg*(64-6)+'000' + item for item in xpm_background[3:-3]
+        ] + [
+        '0'*64 + item for item in xpm_background[-3:]
         ] + [
         line.replace('%', fg).replace(' ', bg)
         for line in char_map

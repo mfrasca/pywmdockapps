@@ -214,7 +214,7 @@ def main():
     mainLoop(timeFmt, dateFmt, dayFmt, weekFmt)
 
 char_width, char_height = wmdocklib.initPixmap(font_name='6x8',
-                                               bg='f', fg='9')
+                                               bg='8', fg='a')
 
 if __name__ == '__main__':
     main()
