@@ -537,8 +537,8 @@ background = \
  ]
 
 char_width, char_height = wmdocklib.initPixmap(background,
-                                               font_name='6x8',
-                                               bg='7', fg='a')
+                                               font_name='5x7',
+                                               bg='8', fg='a')
 
 if __name__ == '__main__':
     main()

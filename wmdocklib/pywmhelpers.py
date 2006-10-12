@@ -180,10 +180,10 @@ def initPixmap(xpm_background=None,
     """
 
     if xpm_background is None:
-        xpm_background = [bg*width]*height
+        xpm_background = ['0'*width]*2 + ['00'+bg*(width-4)+'00']*(height-4) + ['0'*width]*2
     if palette is None:
         palette = {
-            0: ('#000000','black'),
+            0: ('#000000','transparent'),
             1: ('#000080','blue'),
             2: ('#008080','cyan'),
             3: ('#008000','green'),
@@ -191,7 +191,7 @@ def initPixmap(xpm_background=None,
             5: ('#800000','red'),
             6: ('#800080','purple'),
             7: ('#c0c0c0','light_gray'),
-            8: ('#808080','dark_gray'),
+            8: ('#010101','black'),
             9: ('#0000ff','light_blue'),
             10: ('#00ffff','light_cyan'),
             11: ('#00ff00','light_green'),
@@ -463,12 +463,4 @@ char_defs = {
     ]
     },
     }
-
-default_xpm_header = [
-    '128 112 4 1',
-    '_\tc #7f260a',
-    ' \tc #000000 s background',
-    '/\tc #2020b2 s graph',
-    '%\tc #2081B2 s text',
-    ]
  
