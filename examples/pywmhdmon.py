@@ -92,6 +92,10 @@ class PywmHDMon:
         self._statFile = procStat
         self._maxIODiff = 0
         self._lastIO = -1
+        for i in range(len(self._pathsToMonitor)):
+            wmdocklib.addMouseRegion(i+1, 8, self.getY(i+1)+yOffset,
+                                     58, self.getY(i+1)+char_height+yOffset)
+
 
     def addString(self, s, x, y):
         try:
@@ -397,10 +401,11 @@ def main():
     char_width, char_height = wmdocklib.initPixmap(background,
                                                    font_name='6x8',
                                                    palette={2:'cyan4',
+                                                            3:'cyan3',
                                                             7:'cyan',
                                                             8:'cyan4',
                                                             0:'black'},
-                                                   bg=0, fg=2)
+                                                   bg=0, fg=3)
 
     pathsToMonitor = []
     for i in range(1,1000):
@@ -420,9 +425,6 @@ def main():
                 'Unknown display mode: %s, using default.\n' % displayMode)
             displayMode = defaultMode
         pathsToMonitor.append((label[:3], path, displayMode, action))
-        wmdocklib.addMouseRegion(i,
-                                   8, 8 + (i - 1) * (char_height + 1),
-                                   58, 4 + i * (char_height + 1))
     procStat = config.get('procstat', defaultProcStat)
     skipping = int(config.get('skipconf', 0))
     actMonEnabled = int(config.get('monitoring',0))
