@@ -367,10 +367,7 @@ background = \
  ]
 
 def main():
-    global char_width, char_height
-    char_width, char_height = wmdocklib.initPixmap(background,
-                                                   font_name='6x8',
-                                                   palette=palette)
+    wmdocklib.initPixmap(background, palette=palette)
     config = parseCommandLine(sys.argv)
     procStat = config.get('procstat', defaultProcStat)
     if not os.access(procStat, os.R_OK):
