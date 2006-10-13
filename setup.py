@@ -21,7 +21,7 @@ setup(name="pywmdockapps",
       
       author="Kristoffer Erlandsson & al.",
       author_email="mfrasca@zonnet.nl",
-      url="http://ibo.sourceforge.net",
+      url="http://pywmdockapps.sourceforge.net",
       license="(L)GPL",
       packages=['wmdocklib',
                 ],

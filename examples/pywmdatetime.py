@@ -61,7 +61,6 @@ dayDefaultFormat = '%A'
 weekDefaultFormat = 'wk %q'  # %q added by Kristoffer for different week calculation.
 
 defaultConfigFile = '~/.pywmdatetimerc'
-defaultRGBFiles = ['/usr/lib/X11/rgb.txt', '/usr/X11R6/lib/X11/rgb.txt']
 maxCharsPerLine = 9
 
 def addString(s, x, y):
@@ -214,7 +213,7 @@ def main():
     mainLoop(timeFmt, dateFmt, dayFmt, weekFmt)
 
 char_width, char_height = wmdocklib.initPixmap(font_name='6x8',
-                                               bg='8', fg='a')
+                                               bg=0, fg=2)
 
 if __name__ == '__main__':
     main()

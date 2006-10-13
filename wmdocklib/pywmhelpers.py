@@ -31,6 +31,13 @@ import re
 import ConfigParser
 
 import pywmgeneral
+defaultRGBFileList = [
+    '/etc/X11/rgb.txt',
+    '/usr/lib/X11/rgb.txt',
+    '/usr/share/X11/rgb.txt',
+    '/usr/X11R6/lib/X11/rgb.txt',
+    '/usr/lib/X11/rgb.txt',
+    ]
 
 def readConfigFile(fileName, errOut):
     """Read the config file fileName.
@@ -132,30 +139,9 @@ def readXPM(fileName):
         break
     return res
 
-def setColor(xpm, name, newColor):
-    """Find the color with comment name and set this color to newColor.
-    
-    Change the source code of an XPM represented as a list of strings.
-    I'm certain that this will fail on many XPMs too, but it'll do for
-    the ones I use. No check is done that the color is valid, this has
-    to be done elsewhere.
-    """
-    colorRE = re.compile(
-            r"^(?P<letter>.).*?c (?P<color>#.*?) s (?P<comment>.*)")
-    index = 1
-    for line in xpm[1:]:
-        m = colorRE.match(line)
-        if not m is None:
-            comment = m.group('comment')
-            if comment == name:
-                letter = m.group('letter')
-                color = newColor
-                xpm[index] = '%s\tc %s s %s' % (letter, color, comment)
-        index += 1
-
 def initPixmap(xpm_background=None,
                font_name='6x8',
-               bg='0', fg='7',
+               bg=0, fg=7,
                width=64, height=64,
                margin=3,
                palette=None):
@@ -163,45 +149,66 @@ def initPixmap(xpm_background=None,
 
     a wmdockapp has a 128x112 pixmap
 
-    the 64x64 upper left area is the work area in which we put what we want
-    to be displayed.
+    the (width)x(height) upper left area is the work area in which we put
+    what we want to be displayed.
 
-    the 64x64 upper right area contains the pattern for blanking the area.
-    this is initialized using the xpm_background parameter.  xpm_background
-    must contain a list of 64 strings of length 64.
+    the remaining upper right area contains patterns that can be used for
+    blanking/resetting portions of the displayed area.
 
     the remaining lower area defines the character set.  this is initialized
     using the corresponding named character set.  a file with this name must
-    be found somewhere in the path.
+    be found somewhere in the path.  the colours used in the xpm file for
+    the charset must be ' ' and '%'.  they will be changed here to bg and
+    fg.
 
-    xpm_background and the font must share the same palette.  the font must
-    be black/white.
+    palette is a dictionary
+    1: of integers <- [0..15] to colours.
+    2: of single chars to colours.
+
+    a default palette is provided, and can be silently overwritten with the
+    one passed as parameter.
 
     The XBM mask is created out of the XPM.
     """
 
+    # a palette is a dictionary from one single letter to an hexadecimal
+    # colour.  per default we offer a 16 colours palette including what I
+    # consider the basic colours:
+    basic_colours = ['black', 'blue3', 'green3', 'cyan3',
+                     'red3', 'magenta3', 'yellow3', 'gray',
+                     'gray41', 'blue1', 'green1', 'cyan1',
+                     'red1', 'magenta1', 'yellow1', 'white']
+
+    alter_palette, palette = palette, {}
+    for name, index in zip(basic_colours, range(16)):
+        palette['%x'%index] = getColorCode(name)
+
+    # palette = {'0':..., '1':..., ..., 'f':...}
+    # named_colours = {'black':'0', 'green': '1', ..., 'white':'f'}
+    
+    if alter_palette is not None:
+        # alter_palette contains 0..15/chr -> 'name'/'#hex'
+        # interpret that as chr -> '#hex'
+        for k,v in alter_palette.items():
+            if isinstance(k, int):
+                k = '%x' % k
+            k = k[0]
+            if not v.startswith('#'):
+                v = getColorCode(v)
+            palette[k] = v
+
+    if isinstance(bg, str) and len(bg)>1:
+        bg = named_colours.get(bg, 0)
+    if isinstance(fg, str) and len(fg)>1:
+        fg = named_colours.get(fg, 7)
+    if isinstance(bg, int):
+        bg = '%x' % bg
+    if isinstance(fg, int):
+        fg = '%x' % fg
+
     if xpm_background is None:
         #xpm_background = ['0'*width]*4 + ['0000'+bg*(width-8)+'0000']*(height-8) + ['0'*width]*4
         xpm_background = [bg*width]*height
-    if palette is None:
-        palette = {
-            0: ('#000000','transparent'),
-            1: ('#000080','blue'),
-            2: ('#008080','cyan'),
-            3: ('#008000','green'),
-            4: ('#808000','yellow'),
-            5: ('#800000','red'),
-            6: ('#800080','purple'),
-            7: ('#c0c0c0','light_gray'),
-            8: ('#000000','black'),
-            9: ('#0000ff','light_blue'),
-            10: ('#00ffff','light_cyan'),
-            11: ('#00ff00','light_green'),
-            12: ('#ffff00','light_yellow'),
-            13: ('#ff0000','light_red'),
-            14: ('#ff00ff','light_purple'),
-            15: ('#ffffff','white'),
-            }
 
     global char_width, char_height, char_map
     global tile_width, tile_height
@@ -214,21 +221,27 @@ def initPixmap(xpm_background=None,
     tile_height = height
     
     xpm = [
-        '128 112 %d 1' % len(palette),
+        '128 112 %d 1' % (1+len(palette)),
         ] + [
-        '%x\tc %s s %s' % (k, v[0], v[-1])
+        ' \tc black'
+        ] + [
+        '%s\tc %s' % (k,v)
         for k,v in palette.items()
         ] + [
-        '0'*width + item[:128-width] for item in xpm_background[:margin]
+        ' '*width + item[:128-width] for item in xpm_background[:margin]
         ] + [
-        '0'*margin+bg*(width-margin-margin-2)+'0'*(margin+2) + item[:128-width] for item in xpm_background[margin:-margin-1]
+        ' '*margin+bg*(width-margin-margin-2)+' '*(margin+2) + item[:128-width] for item in xpm_background[margin:-margin-1]
         ] + [
-        '0'*width + item[:128-width] for item in xpm_background[-margin-1:]
+        ' '*width + item[:128-width] for item in xpm_background[-margin-1:]
         ] + [
         line.replace('%', fg).replace(' ', bg)
         for line in char_map
         ]
-    
+    if 0:
+        print '/* XPM */\nstatic char *_x_[] = {'
+        for item in xpm:
+            print '"%s",' % item
+        print '};'
     pywmgeneral.includePixmap(xpm)
     return char_width, char_height
 
@@ -276,13 +289,22 @@ def getEvent():
     """
     return pywmgeneral.checkForEvents()
 
-def getColorCode(colorName, rgbFileName):
+def getColorCode(colorName, rgbFileName=None):
     """Convert a color to rgb code usable in an xpm.
     
     We use the file rgbFileName for looking up the colors. Return None
     if we find no match. The rgbFileName should be like the one found in
     /usr/lib/X11R6/rgb.txt on most sytems.
     """
+
+    if rgbFileName is None:
+        for fn in defaultRGBFileList:
+            if os.access(fn, os.R_OK):
+                rgbFileName = fn
+                break
+    if rgbFileName is None:
+        raise ValueError('cannot find rgb file')
+
     f = file(rgbFileName, 'r')
     lines = f.readlines()
     f.close()
@@ -299,9 +321,7 @@ def getColorCode(colorName, rgbFileName):
                         b = int(words[2])
                     except ValueError:
                         continue
-                    rgbstr = '#' + str(hex(r))[2:].zfill(2) + \
-                                   str(hex(g))[2:].zfill(2) + \
-                                   str(hex(b))[2:].zfill(2)
+                    rgbstr = '#%02x%02x%02x' % (r,g,b)
                     return rgbstr
     return None
 
