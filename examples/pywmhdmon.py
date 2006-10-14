@@ -397,15 +397,18 @@ def main():
     for i in clConfig.iteritems():
         config[i[0]] = i[1]
 
+    palette = {}
+    palette[0] = clConfig.get('background', 'black')
+    palette[2] = clConfig.get('textcolor', 'cyan3')
+    palette[7] = clConfig.get('barfgcolor', 'cyan')
+    palette[8] = clConfig.get('barbgcolor', 'cyan4')
+    palette[5] = clConfig.get('activitycolor', 'cyan2')
+
     global char_width, char_height
     char_width, char_height = wmdocklib.initPixmap(background,
                                                    font_name='6x8',
-                                                   palette={2:'cyan4',
-                                                            3:'cyan3',
-                                                            7:'cyan',
-                                                            8:'cyan4',
-                                                            0:'black'},
-                                                   bg=0, fg=3)
+                                                   palette=palette,
+                                                   bg=0, fg=2)
 
     pathsToMonitor = []
     for i in range(1,1000):
