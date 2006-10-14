@@ -280,25 +280,6 @@ def parseCommandLine(argv):
                 sys.exit(2)
     return d
 
-
-
-palette = {
-    ' ': '#208120812081',
-    '.': '#00000000FFFF',
-    'o': '#C71BC30BC71B',
-    'O': '#861782078E38',
-    '+': '#EFBEF3CEEFBE',
-    '@': '#618561856185',
-    '#': '#9E79A2899E79',
-    '$': '#410341034103',
-    'o': '#2020b2b2aaaa',
-    '/': '#2020b2b2aaaa',
-    '-': '#707070707070',
-    '|': '#2020b2b2aaaa',
-    'I': '#707070707070',
-    '_': '#000000000000',
-    '%': '#2081B2CAAEBA',
-    }
 background = \
 [' ...............................................................................................',
  ' .///..___..ooo..___..___......|.I..............................................................',
@@ -367,7 +348,6 @@ background = \
  ]
 
 def main():
-    wmdocklib.initPixmap(background, palette=palette)
     config = parseCommandLine(sys.argv)
     procStat = config.get('procstat', defaultProcStat)
     if not os.access(procStat, os.R_OK):
@@ -386,6 +366,27 @@ def main():
     except IndexError:
         programName = ''
     sys.argv[0] = programName
+
+    palette = {
+        ' ': '#208120812081',
+        '.': '#00000000FFFF',
+        'o': '#C71BC30BC71B',
+        'O': '#861782078E38',
+        '+': '#EFBEF3CEEFBE',
+        '@': '#618561856185',
+        '#': '#9E79A2899E79',
+        '$': '#410341034103',
+        'o': '#2020b2b2aaaa',
+        }
+    #palette['o'] = config.get('indicator', '#2020b2b2aaaa')
+    palette['/'] = config.get('barfgcolor', '#2020b2b2aaaa')
+    palette['-'] = config.get('barbgcolor', '#707070707070')
+    palette['|'] = config.get('graphforeground', '#2020b2b2aaaa')
+    palette['I'] = config.get('graphbackground', '#707070707070')
+    palette['_'] = config.get('background', '#000000000000')
+    palette['%'] = config.get('foreground', '#2081B2CAAEBA')
+
+    wmdocklib.initPixmap(background, palette=palette)
     wmdocklib.openXwindow(sys.argv, width, height)
     pywmsysmon = PywmSysMon(procMeminfo, procStat, ignoreNice, updateDelay)
     pywmsysmon.mainLoop()

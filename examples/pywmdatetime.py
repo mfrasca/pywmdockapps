@@ -209,11 +209,16 @@ def main():
     except IndexError:  # Should only happen when using the interpreter.
         programName = ''
     sys.argv[0] = programName
+
+    palette = {}
+    palette[0] = clConfig.get('background', 'black')
+    palette[2] = clConfig.get('foreground', 'cyan3')
+    
+    global char_width, char_height
+    char_width, char_height = wmdocklib.initPixmap(font_name='6x8',
+                                                   bg=0, fg=2, palette=palette)
     wmdocklib.openXwindow(sys.argv, width, height)
     mainLoop(timeFmt, dateFmt, dayFmt, weekFmt)
-
-char_width, char_height = wmdocklib.initPixmap(font_name='6x8',
-                                               bg=0, fg=2)
 
 if __name__ == '__main__':
     main()
