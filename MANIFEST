@@ -10,7 +10,10 @@ examples/sample.pywmdatetimerc
 examples/sample.pywmgenericrc
 examples/sample.pywmhdmonrc
 examples/sample.pywmsetirc
-examples/tmount
+wmdocklib/5x7.xpm
+wmdocklib/6x8.xpm
+wmdocklib/6x8slant.xpm
+wmdocklib/8x8.xpm
 wmdocklib/README
 wmdocklib/__init__.py
 wmdocklib/pywmgeneral.c
