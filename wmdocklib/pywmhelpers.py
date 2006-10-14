@@ -184,7 +184,6 @@ def initPixmap(xpm_background=None,
         palette['%x'%index] = getColorCode(name)
 
     # palette = {'0':..., '1':..., ..., 'f':...}
-    # named_colours = {'black':'0', 'green': '1', ..., 'white':'f'}
     
     if alter_palette is not None:
         # alter_palette contains 0..15/chr -> 'name'/'#hex'
@@ -197,28 +196,29 @@ def initPixmap(xpm_background=None,
                 v = getColorCode(v)
             palette[k] = v
 
-    if isinstance(bg, str) and len(bg)>1:
-        bg = named_colours.get(bg, 0)
-    if isinstance(fg, str) and len(fg)>1:
-        fg = named_colours.get(fg, 7)
     if isinstance(bg, int):
         bg = '%x' % bg
     if isinstance(fg, int):
         fg = '%x' % fg
 
     if xpm_background is None:
-        #xpm_background = ['0'*width]*4 + ['0000'+bg*(width-8)+'0000']*(height-8) + ['0'*width]*4
         xpm_background = [bg*width]*height
 
-    global char_width, char_height, char_map
     global tile_width, tile_height
-
-    char_width = char_defs[font_name]['width']
-    char_height = char_defs[font_name]['height']
-    char_map = char_defs[font_name]['map']
-
     tile_width = width
     tile_height = height
+
+    def charsize_from_fontname(font_name):
+        import re
+
+        d = re.compile(r'.*([0-9]+)x([0-9]+).*')
+        m = d.match(font_name)
+        if not m:
+            raise ValueError("can't infer font size from name")
+        return [int(item) for item in m.groups()]
+        
+    global char_width, char_height
+    char_width, char_height = charsize_from_fontname(font_name)
     
     xpm = [
         '128 112 %d 1' % (1+len(palette)),
@@ -235,7 +235,7 @@ def initPixmap(xpm_background=None,
         ' '*width + item[:128-width] for item in xpm_background[-margin-1:]
         ] + [
         line.replace('%', fg).replace(' ', bg)
-        for line in char_map
+        for line in char_defs[font_name]
         ]
     if 0:
         print '/* XPM */\nstatic char *_x_[] = {'
@@ -326,10 +326,7 @@ def getColorCode(colorName, rgbFileName=None):
     return None
 
 char_defs = {
-    '5x7': {
-    'width': 5,
-    'height': 7,
-    'map': [
+    '5x7': [
 "       %   % %           %           %    %   %                                   %    %   %%  %%%%   %  %%%%  %%  %%%%  %%     ",
 "       %   % %  % %  %%% %  %  %     %   %     %   % %   %                    %  % %  %%  %  %    %  %%  %    %       % %  %    ",
 "       %   % % %%%%%% %    %  % %    %   %     %    %    %                   %   % %   %     %  %%  % %  %%%  %%%    %   %%     ",
@@ -378,12 +375,8 @@ char_defs = {
 "                                                                                                                                ",
 "                                                                                                                                ",
 "                                                                                                                                ",
-    ]
-    },
-    '6x8': {
-    'width': 6,
-    'height': 8,
-    'map': [
+    ],
+    '6x8': [
 "        %    %  %  % %    %   %   %  %%       %    %   %                                         %%%    %    %%%   %%%     %    ",
 "        %    %  %  % %   %%%% %   % %  %     %    %     %   %   %   %                           %   %  %%   %   % %   %   %%    ",
 "        %    %  % %%%%% %        %   %%     %    %       %   % %    %                         % %  %%   %       %     %  % %    ",
@@ -432,12 +425,8 @@ char_defs = {
 "                                                                                                                                ",
 "                                                                                                                                ",
 "                                                                                                                                ",
-    ]
-    },
-    '8x8': {
-    'width': 8,
-    'height': 8,
-    'map': [
+    ],
+    '8x8': [
 "           %%    %%  %%  %%  %%    %%    %%   %   %%%%       %%     %%    %%                                                    ",
 "           %%    %%  %%  %%  %%   %%%%%  %%  %%  %%  %%     %%     %%      %%    %%  %%    %%                                 %%",
 "           %%    %%  %% %%%%%%%% %%         %%    %%%%     %%     %%        %%    %%%%     %%                                %% ",
@@ -486,7 +475,6 @@ char_defs = {
 " %%%%%    %%%%%  %%          %%    %%    %%  %%   %%%%    %%%%%   %%%%    %%%%%   %%      %%         %%     %%                  ",
 " %%          %%  %%      %%%%%      %%%   %%%%%    %%     %% %%  %%  %%     %%   %%%%%%   %%%%        %%  %%%%          %%%%%%%%",
 " %%          %%                                                          %%%%                                                   ",
-    ]
-    },
+    ],
     }
  
