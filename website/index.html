@@ -11,11 +11,13 @@
 <p>pywmdockapps is the place to be if you are interested in <a
 href="http://www.windowmaker.org">WindowMaker</a>, <a
 href="http://dockapps.org">dockapps</a> and <a
-href="http://www.python.org">Python</a>.  WindowMaker dockapps are graphical
-applications fitting in a 64x64 tile.  they can work in WindowMaker or any
-other window manager which can handle WindowMaker style dockapps.
-pywmdockapps is a Python library enabling quick development of your own
-dockapps plus a small collection of usable examples.
+href="http://www.python.org">Python</a>.  
+
+WindowMaker dockapps are graphical applications fitting in a 64x64 tile.
+they can work in WindowMaker or any other window manager which can handle
+WindowMaker style dockapps.  The project pywmdockapps contains a Python
+library -wmdocklib- enabling quick development of your own dockapps plus a
+small collection of usable examples.
 </p>
 
 <p>the included examples are quite untested.  they may work quite well, may
@@ -46,6 +48,23 @@ will be processed quickly (a matter of 3/5 days).
 
 <h3>News</h3>
 
+<p class="newsdate">2006-10-13</p>
+<p class="newstext">we are now at version 1.11.  the library can be
+built/installed/distributed using the standard distutils library.
+do</p>
+<pre>python setup.py build
+sudo python setup.py install</pre>
+
+<p class="newstext">additional fonts can be installed.  have a look at the
+ones defined in the wmdocklib directory.  the constraints are: the name must
+contain an indication of the size of the character cell (something like
+6x8); only the ASCII characters 32-127 can be defined; the width of the xpm
+must be 128 pixels; in the xpm the two characters ' '(space) and '%' are
+reserved for background and foreground.
+</p>
+<p class="newstext">once you have added your own font, redo the intallation
+procedure.  </p>
+
 <p class="newsdate">2005-09-05</p>
 <p class="newstext">coordination taken over by Mario Frasca.  project accepted in sourceforge.  </p>
 
@@ -72,13 +91,13 @@ hang.</p>
 <p class="newstext">Kristoffer Erlandsson starts the project, creating the file pywmgeneral.c. Thanks to Martijn Pieterse for the original wmgeneral.c</p>
 <hr>
 
-<h3>Pywmgeneral</h3>
-<p>Pywmgeneral is a library that makes it possible to write WindowMaker
+<h3>wmdocklib</h3>
+<p>wmdocklib is a library that makes it possible to write WindowMaker
 dockapps in <a href='http://www.python.org'>Python</a>. Quite a bit of the
-code is taken from the old wmgeneral.c and I have just provided Python wrappers
-around these functions. The library also contains a Python part above the
-wrappers that ease up argument passing and return values. Also some other
-usable methods are provided there.
+code is taken from wmgeneral.c and Kristoffer says he just provided Python
+wrappers around those functions. The library also contains a Python part
+above the wrappers that ease up argument passing and return values. Also
+some other usable methods are provided there.
 </p>
 <hr>
 
@@ -149,7 +168,7 @@ fine tuning.
 <h3>download</h3>
 
 <p>all released files can be found <a
-href="http://sourceforge.net/project/showfiles.php?group_id=147660">here</a></p>.
+href="http://sourceforge.net/project/showfiles.php?group_id=147660">here</a>.</p>
 
 <p>not yet released versions can be downloaded <a
 href="http://sourceforge.net/cvs/?group_id=147660">through cvs</a>.</p>
