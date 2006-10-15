@@ -208,17 +208,21 @@ def initPixmap(xpm_background=None,
     tile_width = width
     tile_height = height
 
-    def charsize_from_fontname(font_name):
-        import re
+    def readFont(font_name):
+        # read xpm, skip header and color definitions, fill/trim to 48 lines.
+        fontdef = readXPM(__file__[:__file__.rfind(os.sep) + 1] + font_name + '.xpm')
+        fontdef = fontdef[1 + int(fontdef[0].split(' ')[2]):]
+        fontdef = (fontdef + [' '*128]*48)[:48]
 
-        d = re.compile(r'.*([0-9]+)x([0-9]+).*')
-        m = d.match(font_name)
+        import re
+        m = re.match(r'.*([0-9]+)x([0-9]+).*', font_name)
         if not m:
-            raise ValueError("can't infer font size from name")
-        return [int(item) for item in m.groups()]
+            raise ValueError("can't infer font size from name (does not contain wxh)")
+        width, height = [int(item) for item in m.groups()]
+        return width, height, fontdef
         
     global char_width, char_height
-    char_width, char_height = charsize_from_fontname(font_name)
+    char_width, char_height, fontdef = readFont(font_name)
     
     xpm = [
         '128 112 %d 1' % (1+len(palette)),
@@ -235,7 +239,7 @@ def initPixmap(xpm_background=None,
         ' '*width + item[:128-width] for item in xpm_background[-margin-1:]
         ] + [
         line.replace('%', fg).replace(' ', bg)
-        for line in char_defs[font_name]
+        for line in fontdef
         ]
     if 0:
         print '/* XPM */\nstatic char *_x_[] = {'
