@@ -103,8 +103,9 @@ some other usable methods are provided there.
 
 <h3>Pywmdatetime</h3>
 <img src="pictures/pywmdatetime.png" alt="pywmdatetime">
+<img src="pictures/pywmdatetime-fonts.png" alt="pywmdatetime">
 <p>Pywmdatetime is a dockapp that displays the current time, date, weekday and
-week number. Formats and colours are easily configured. </p>
+week number. Formats and colours and font are easily configured. </p>
 <p>Changes:</p>
 <p class="newsdate">2003-09-01</p>
 <p class="newstext">Fixed a bug where the week didn't update if we used %q style week numbering.</p>
@@ -118,10 +119,21 @@ painted.
 
 <h3>Pywmhdmon</h3>
 <img src="pictures/pywmhdmon.png" alt="pywmhdmon">
-<p>Pywmhdmon is a dockapp that monitors the free space of up to four of your
-filesystems. It also has a little bar that displays the current hard drive
-activity.</p>
+<img src="pictures/angelico-unmounted.png" alt="pywmhdmon">
+<img src="pictures/angelico-mounted.png" alt="pywmhdmon">
+<img src="pictures/croese-mounted.png" alt="pywmhdmon">
+<p>Pywmhdmon is a dockapp that monitors the free space of up to five of your
+filesystems (per instance). the fifth line can be set to contain a little
+bar that displays the current hard drive activity.</p>
+<p>the configuration file can contain more than 5 entries, the '-s' option
+is then used to skip the correct amount of entries in each activation of the
+program.</p>
 <p>Changes:</p>
+<p class="newsdate">2006-10-12</p>
+<p class="newstext">each mount point can be associated to an 'action'.  this
+action can be 'mount' or 'eject'.  clicking on a mount point with action
+'mount' will toggle mounting it.  'eject' is the same, but after unmounting,
+ejection will be attempted.
 <p class="newsdate">2004-07-15</p>
 <p class="newstext">Added a patch from Mario Frasca (Thanks!) which prevents the app from showing
 the data from the host file system if there is no filesystem mounted at the
