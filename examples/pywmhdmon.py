@@ -44,6 +44,7 @@ Available options are:
 -f, --barfgcolor <color>        set the foregroundcolor of the act. bar
 -g, --barbgcolor <color>        set the background color of the act. bar
 -b, --background <color>        set the background color
+-F, --font <file>               set the font name
 -r, --rgbfile <file>            set the rgb file to get color codes from
 -c, --configfile <file>         set the config file to use
 -p, --procstat <file>           set the location of /proc/stat
@@ -299,10 +300,10 @@ def handler(num, frame):
 
 def parseCommandLine(argv):
     """Parse the commandline. Return a dictionary with options and values."""
-    shorts = 'ht:f:g:b:r:c:p:s:'
+    shorts = 'ht:f:g:b:r:c:p:s:F:'
     longs = ['help', 'textcolor=', 'background=', 'barfgcolor=',
              'rgbfile=', 'configfile=', 'barbgcolor=', 'procstat=',
-             'skipconf=']
+             'skipconf=','font=']
     try:
         opts, nonOptArgs = getopt.getopt(argv[1:], shorts, longs)
     except getopt.GetoptError, e:
@@ -324,6 +325,8 @@ def parseCommandLine(argv):
             d['configfile'] = a
         if o in ('-g', '--barbgcolor'):
             d['barbgcolor'] = a
+        if o in ('-F', '--font'):
+            d['font'] = a
         if o in ('-f', '--barfgcolor'):
             d['barfgcolor'] = a
         if o in ('-p', '--procstat'):
@@ -404,9 +407,11 @@ def main():
     palette[8] = clConfig.get('barbgcolor', 'cyan4')
     palette[5] = clConfig.get('activitycolor', 'cyan2')
 
+    font = clConfig.get('font', '6x8')
+
     global char_width, char_height
     char_width, char_height = wmdocklib.initPixmap(background,
-                                                   font_name='6x8',
+                                                   font_name=font,
                                                    palette=palette,
                                                    bg=0, fg=2)
 

@@ -12,6 +12,7 @@ examples/sample.pywmhdmonrc
 examples/sample.pywmsetirc
 wmdocklib/5x7.xpm
 wmdocklib/6x8.xpm
+wmdocklib/6x8orig.xpm
 wmdocklib/6x8slant.xpm
 wmdocklib/7x8zx.xpm
 wmdocklib/8x8.xpm

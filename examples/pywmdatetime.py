@@ -31,6 +31,7 @@ Available options are:
 -h, --help                      print this help
 -f, --foreground <color>        set the foreground color
 -b, --background <color>        set the background color
+-F, --font <file>               set the font name
 -t, --timeformat <format>       set the time format
 -d, --dateformat <format>       set the date format
 -y, --weekdayformat <format>    set the weekday format
@@ -100,9 +101,9 @@ def calculateWeek(localTime):
 
 def parseCommandLine(argv):
     """Parse the commandline. Return a dictionary with options and values."""
-    shorts = 'hf:b:t:d:e:y:r:c:'
+    shorts = 'hf:b:t:d:e:y:r:c:F:'
     longs = ['help', 'foreground=', 'background=', 'timeformat=', 'dateformat=',
-             'weekdayformat=', 'weekformat=', 'rgbfile=', 'configfile=']
+             'weekdayformat=', 'weekformat=', 'rgbfile=', 'configfile=', 'font=']
     try:
         opts, nonOptArgs = getopt.getopt(argv[1:], shorts, longs)
     except getopt.GetoptError, e:
@@ -116,6 +117,8 @@ def parseCommandLine(argv):
             sys.exit(0)
         if o in ('-f', '--foreground'):
             d['foreground'] = a
+        if o in ('-F', '--font'):
+            d['font'] = a
         if o in ('-b', '--background'):
             d['background'] = a
         if o in ('-t', '--timeformat'):
@@ -214,8 +217,10 @@ def main():
     palette[0] = clConfig.get('background', 'black')
     palette[2] = clConfig.get('foreground', 'cyan3')
     
+    font = clConfig.get('font', '6x8orig')
+    
     global char_width, char_height
-    char_width, char_height = wmdocklib.initPixmap(font_name='6x8',
+    char_width, char_height = wmdocklib.initPixmap(font_name=font,
                                                    bg=0, fg=2, palette=palette)
     wmdocklib.openXwindow(sys.argv, width, height)
     mainLoop(timeFmt, dateFmt, dayFmt, weekFmt)

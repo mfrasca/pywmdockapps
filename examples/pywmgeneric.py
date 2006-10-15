@@ -28,6 +28,7 @@ Available options are:
     -h, --help                  print this help
     -t, --text <color>          set the text color
     -b, --background <color>    set the background color
+    -F, --font <file>           set the font name
     -r, --rgbfile <file>        set the rgb file to get color codes from
     -c, --configfile <file>     set the config file to use
 """
@@ -516,8 +517,8 @@ class PywmGeneric:
 
 def parseCommandLine(argv):
     """Parse the commandline. Return a dictionary with options and values."""
-    shorts = 'ht:b:r:c:'
-    longs = ['help', 'text=', 'background=', 'rgbfile=', 'configfile=']
+    shorts = 'ht:b:r:c:F:'
+    longs = ['help', 'text=', 'background=', 'rgbfile=', 'configfile=', 'font=']
     try:
         opts, nonOptArgs = getopt.getopt(argv[1:], shorts, longs)
     except getopt.GetoptError, e:
@@ -533,6 +534,8 @@ def parseCommandLine(argv):
             d['textcolor'] = a
         if o in ('-b', '--background'):
             d['background'] = a
+        if o in ('-F', '--font'):
+            d['font'] = a
         if o in ('-r', '--rgbfile'):
             d['rgbfile'] = a
         if o in ('-c', '--configfile'):
@@ -651,6 +654,8 @@ def main():
     palette['_'] = clConfig.get('background', '#000000000000')
     palette['%'] = clConfig.get('text', '#2081B2CAAEBA')
 
+    font = clConfig.get('font', '6x8')
+
     configFile = clConfig.get('configfile', defaultConfigFile)
     if not configFile.count(os.sep):
         configFile = os.sep.join(sys.argv[0].split(os.sep)[:-1]) + os.sep + configFile
@@ -664,7 +669,7 @@ def main():
 
     global char_width, char_height
     char_width, char_height = wmdocklib.initPixmap(background,
-                                                   font_name='8x8',
+                                                   font_name=font,
                                                    bg='f', fg='9',
                                                    palette=palette)
 
