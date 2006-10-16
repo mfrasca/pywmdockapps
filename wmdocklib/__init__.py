@@ -6,7 +6,7 @@ wmgeneral.c, but some new functions are added too.
 to get help about a contained package, try:
 help(wmdocklib.<name>)
 """
-from pywmhelpers import *
 from pywmgeneral import *
+from pywmhelpers import *
 
 __all__ = []
