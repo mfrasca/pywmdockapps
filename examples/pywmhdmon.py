@@ -149,7 +149,12 @@ class PywmHDMon:
                 x + paintWidth + xOffset, y + yOffset)
 
     def getY(self, line):
-        return 2 + (line - 1) * (char_height + 1)
+        "returns the y coordinate of the top line for the box"
+        lineCount = (height - yOffset*2) / (char_height+2)
+        interlinea = (height - yOffset*2) / lineCount
+        lastBaseline = yOffset + lineCount * interlinea
+        extraYOffset = (height - yOffset - lastBaseline) / 2
+        return extraYOffset + (line - 1) * interlinea
 
     def paintLabel(self, line, label):
         self.addString(label, 1, self.getY(line))
@@ -432,7 +437,10 @@ def main():
             sys.stderr.write(
                 'Unknown display mode: %s, using default.\n' % displayMode)
             displayMode = defaultMode
-        pathsToMonitor.append((label[:3], path, displayMode, action))
+        takeChars = 3
+        if char_width <= 5:
+            takeChars = 4
+        pathsToMonitor.append((label[:takeChars], path, displayMode, action))
     procStat = config.get('procstat', defaultProcStat)
     skipping = int(config.get('skipconf', 0))
     actMonEnabled = int(config.get('monitoring',0))
