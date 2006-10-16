@@ -144,6 +144,7 @@ def checkForEvents():
 
 def mainLoop(timeFmt, dateFmt, dayFmt, weekFmt):
     recalcWeek = weekFmt.find('%q') + 1  # True if we found %q.
+    newWeekFmt = weekFmt
     counter = -1
     lastStrs = [''] * 4
     while 1:
