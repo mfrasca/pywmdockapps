@@ -141,7 +141,7 @@ height = 64
 xOffset = 4
 yOffset = 4
 
-maxChars = 9
+maxChars = 13
 
 defaultConfigFile = '~/.pywmgenericrc'
 defaultRGBFiles = ('/usr/share/X11/rgb.txt', '/usr/X11R6/lib/X11/rgb.txt')
@@ -191,6 +191,7 @@ class Entry:
         self._display = display
         self._scrollText = scrollText
 
+        self._glue = ' ... '
         self._scrollPos = 0
         self._tickCount = 0L
 
@@ -331,23 +332,16 @@ class Entry:
         When reaching the end, paint number of spaces before scrolling in the
         same line again from the right.
         """
-        if self._scrollPos >= \
-                len(self._displayLine) + (maxChars - 4):
-            self._scrollPos = 0
-            self.displayText(self._displayLine)
-        elif self._scrollPos >= len(self._displayLine) - 3:
-            self._scrollPos += 1
-            disp = self._displayLine[self._scrollPos:] + \
-                ' ' * (maxChars - 3)
-            diff = self._scrollPos - len(self._displayLine)
-            if diff > 0:
-                disp = disp[diff:]
-            disp += self._displayLine
-            self.displayText(disp)
-        else:
-            self._scrollPos += 1
-            self.displayText(
-                self._displayLine[self._scrollPos:])
+
+        # increase the amount of scrolled chars by one, modulo the lenght.
+        # take the line, append to it some glue and a copy of the line
+        # again, drop as many characters as the updated scrollPos, display
+        # the resulting text.
+        self._scrollPos += 1
+        self._scrollPos %= len(self._displayLine) + len(self._glue)
+        disp = self._displayLine + self._glue + self._displayLine
+        disp = disp[self._scrollPos:]
+        self.displayText(disp)
 
     def tick1(self):
         """Do things that should be done often.
