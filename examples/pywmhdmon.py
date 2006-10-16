@@ -161,7 +161,7 @@ class PywmHDMon:
 
     def paintHdData(self, line, data, mode):
         total, free = data
-        xStart = width - xOffset - 6 * char_width - 1
+        xStart = (width*2)/5
         if total==0:
             self.addString('     ', xStart, self.getY(line))
             self.paintGraph(0, xStart, self.getY(line) + 4, 
@@ -174,10 +174,10 @@ class PywmHDMon:
             self.addString(percentStr, xStart, self.getY(line))
         elif mode == 'used':
             totalStr = bytesToStr(total).rjust(5)
-            self.addString(totalStr, xStart, self.getY(line))
+            self.addString(totalStr, width-yOffset*2-5*char_width-1, self.getY(line))
         elif mode == 'free':
             freeStr = bytesToStr(free).rjust(5)
-            self.addString(freeStr, xStart, self.getY(line))
+            self.addString(freeStr, width-yOffset-5*char_width, self.getY(line))
         elif mode == 'bar':
             percentUsed = (float(total - free) / float(total)) * 100.0
             self.paintGraph(percentUsed, xStart, self.getY(line) + 2, 
