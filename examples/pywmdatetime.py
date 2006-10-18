@@ -75,6 +75,18 @@ def addString(s, x, y):
         raise
         sys.exit(3)
 
+def addTimeString(s, x, y):
+    for c in s:
+        charW = 7
+        charX = 64 + (ord(c) - ord('0')) % 5 * 7
+        if c <='4': charY = 44
+        else: charY = 54
+        if not c.isdigit():
+            charX = 64 + 35
+            charW = 3
+        wmdocklib.copyXPMArea(charX, charY, charW, 10, x+xOffset, y+yOffset)
+        x += charW
+
 def clearLine(y):
     '''Clear a line of text at position y.'''
     wmdocklib.copyXPMArea(73, yOffset, width - 2 * xOffset, char_height,
@@ -84,7 +96,7 @@ def getCenterStartPos(s):
     return wmdocklib.getCenterStartPos(s, width, xOffset)
 
 def getVertSpacing(numLines, margin):
-    return wmdocklib.getVertSpacing(numLines, margin, height, yOffset)
+    return wmdocklib.getVertSpacing(numLines, margin, height, yOffset) + 1
 
 def calculateWeek(localTime):
     """Calculate the week number as we do, for example in Sweden.
@@ -152,12 +164,12 @@ def mainLoop(timeFmt, dateFmt, dayFmt, weekFmt):
         checkForEvents()
         lt = time.localtime()
         timeStr = time.strftime(timeFmt, lt)[:maxCharsPerLine]
-        margin = 3
+        margin = 6
         spacing = getVertSpacing(4, margin)
         timeX = getCenterStartPos(timeStr)
         if lastStrs[0] != timeStr:
             clearLine(margin) 
-            addString(timeStr, timeX, margin)
+            addTimeString(timeStr, timeX, margin-4)
         lastStrs[0] = timeStr
         if counter % 100 == 0:
             # We only perform the date/week checks/updates once every 100th
@@ -190,6 +202,73 @@ def mainLoop(timeFmt, dateFmt, dayFmt, weekFmt):
         wmdocklib.redraw()
         time.sleep(0.1)
 
+background = [
+"                                                                ",
+"                                                                ",
+"                                                                ",
+"                                                                ",
+"                                                                ",
+"                                                                ",
+"                                                                ",
+"                                                                ",
+"                                                                ",
+"                                                                ",
+"                                                                ",
+"                                                                ",
+"                                                                ",
+"                                                                ",
+"                                                                ",
+"                                                                ",
+"                                                                ",
+"                                                                ",
+"                                                                ",
+"                                                                ",
+"                                                                ",
+"                                                                ",
+"                                                                ",
+"                                                                ",
+"                                                                ",
+"                                                                ",
+"                                                                ",
+"                                                                ",
+"                                                                ",
+"                                                                ",
+"                                                                ",
+"                                                                ",
+"                                                                ",
+"                                                                ",
+"                                                                ",
+"                                                                ",
+"                                                                ",
+"                                                                ",
+"                                                                ",
+"                                                                ",
+"                                                                ",
+"                                                                ",
+"                                                                ",
+"                                                                ",
+".+@@+.....#@...#@@#...#@@#....$@%..                             ",
+"$@==@$...+@@..&@--@&.*@--@&...#@%..                             ",
+"&@**@&..#@@@..&@$.@%.&-..@%..*@@%..                             ",
+"%@..@%..#+%@.....$@%....+@#..--@%..                             ",
+"%@..@%....%@.....%@*...%@-..*@$@%..                             ",
+"%@..@%....%@....+@%....&-@+.=#.@%..                             ",
+"%@..@%....%@...+@=$......-@.@-%@=&.                             ",
+"&@**@&....%@..$@=$...&-..-@.@@@@@%.                             ",
+"$@==@$....%@..#@-%%&.+@--@#....@%..                             ",
+".+@@+.....%@..@@@@@%..#@@#.....@%..                             ",
+".@@@@+..+=@%..+@@@@@..%@@+...&@@#......                         ",
+"*@-%%*.$==-@&.*%%%@=.#@-=@*.*@=-@&.....                         ",
+"+@+....+@*.%*....+@*.%@.+@+.%@$.-%.*+..                         ",
+"&@=@#..%@$+$.....--..&@&%@$.%@..%@.%@..                         ",
+"%@%=@*.%@=@@*...*@&...=@@#..&@%&@@.*+..                         ",
+".*.$@%.%@%&@-...#@...#@&%@*..=@@@@.....                         ",
+"....@%.%@..%@...=-...@%..@%...+*%@.&%..                         ",
+"--.*@#.+@$.-@...@%...@-.$@%.$#*.=%.%@..                         ",
+"%@-=@$.$@=-@#..+@+...#@-=@*.$@=-@+.....                         ",
+"$-@=+...+=@%$..+@+...$#@@&...+@@#......                         ",
+]
+
 def main():
     clConfig = parseCommandLine(sys.argv)
     configFile = clConfig.get('configfile', defaultConfigFile)
@@ -214,14 +293,26 @@ def main():
         programName = ''
     sys.argv[0] = programName
 
-    palette = {}
+    palette = {
+        ".":"#181818",
+        "+":"#6E6E0F",
+        "@":"#FFFF00",
+        "#":"#A0A009",
+        "$":"#3B3B14",
+        "%":"#B9B907",
+        "&":"#87870C",
+        "*":"#545411",
+        "=":"#E6E602",
+        "-":"#CFCF04",
+        }
     palette[0] = clConfig.get('background', 'black')
     palette[2] = clConfig.get('foreground', 'cyan3')
     
     font = clConfig.get('font', '6x8orig')
     
     global char_width, char_height
-    char_width, char_height = wmdocklib.initPixmap(font_name=font,
+    char_width, char_height = wmdocklib.initPixmap(background,
+                                                   font_name=font,
                                                    bg=0, fg=2, palette=palette)
     wmdocklib.openXwindow(sys.argv, width, height)
     mainLoop(timeFmt, dateFmt, dayFmt, weekFmt)
