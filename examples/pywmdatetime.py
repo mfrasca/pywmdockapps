@@ -113,8 +113,8 @@ def calculateWeek(localTime):
 
 def parseCommandLine(argv):
     """Parse the commandline. Return a dictionary with options and values."""
-    shorts = 'hf:b:t:d:e:y:r:c:F:'
-    longs = ['help', 'foreground=', 'background=', 'timeformat=', 'dateformat=',
+    shorts = 'hf:b:t:d:e:y:r:c:F:a'
+    longs = ['antialiased', 'help', 'foreground=', 'background=', 'timeformat=', 'dateformat=',
              'weekdayformat=', 'weekformat=', 'rgbfile=', 'configfile=', 'font=']
     try:
         opts, nonOptArgs = getopt.getopt(argv[1:], shorts, longs)
@@ -123,10 +123,13 @@ def parseCommandLine(argv):
         sys.stderr.write(usage)
         sys.exit(2)
     d = {}
+
     for o, a in opts:
         if o in ('-h', '--help'):
             sys.stdout.write(usage)
             sys.exit(0)
+        if o in ('-a', '--antialiased'):
+            d['antialiased'] = True
         if o in ('-f', '--foreground'):
             d['foreground'] = a
         if o in ('-F', '--font'):
@@ -164,12 +167,18 @@ def mainLoop(timeFmt, dateFmt, dayFmt, weekFmt):
         checkForEvents()
         lt = time.localtime()
         timeStr = time.strftime(timeFmt, lt)[:maxCharsPerLine]
-        margin = 6
-        spacing = getVertSpacing(4, margin)
         timeX = 3
-        if lastStrs[0] != timeStr:
-            addTimeString(timeStr, timeX, margin-4)
-        margin = 8
+        if antialiased:
+            margin = 6
+            spacing = getVertSpacing(4, margin)
+            if lastStrs[0] != timeStr:
+                addTimeString(timeStr, timeX, margin-4)
+            margin += 1
+        else:
+            margin = 4
+            spacing = getVertSpacing(4, margin)
+            if lastStrs[0] != timeStr:
+                addString(timeStr, timeX, margin)
         lastStrs[0] = timeStr
         if counter % 100 == 0:
             # We only perform the date/week checks/updates once every 100th
@@ -310,13 +319,16 @@ def main():
     
     font = clConfig.get('font', '6x8orig')
     
-    global char_width, char_height, maxCharsPerLine
+    global char_width, char_height, maxCharsPerLine, antialiased
     char_width, char_height = wmdocklib.initPixmap(background,
                                                    font_name=font,
                                                    bg=0, fg=2, palette=palette)
     maxCharsPerLine = (width-2*xOffset) / char_width
+    antialiased = clConfig.get('antialiased', False)
+
     wmdocklib.openXwindow(sys.argv, width, height)
-    wmdocklib.copyXPMArea(64+2*xOffset+1, 27, width - 2*xOffset, 17, xOffset, yOffset)
+    if antialiased:
+        wmdocklib.copyXPMArea(64+2*xOffset+1, 27, width - 2*xOffset, 17, xOffset, yOffset)
     mainLoop(timeFmt, dateFmt, dayFmt, weekFmt)
 
 if __name__ == '__main__':
