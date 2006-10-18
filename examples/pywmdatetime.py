@@ -96,7 +96,7 @@ def getCenterStartPos(s):
     return wmdocklib.getCenterStartPos(s, width, xOffset)
 
 def getVertSpacing(numLines, margin):
-    return wmdocklib.getVertSpacing(numLines, margin, height, yOffset) + 1
+    return wmdocklib.getVertSpacing(numLines, margin-1, height, yOffset) + 1
 
 def calculateWeek(localTime):
     """Calculate the week number as we do, for example in Sweden.
@@ -168,7 +168,6 @@ def mainLoop(timeFmt, dateFmt, dayFmt, weekFmt):
         spacing = getVertSpacing(4, margin)
         timeX = getCenterStartPos(timeStr)
         if lastStrs[0] != timeStr:
-            clearLine(margin) 
             addTimeString(timeStr, timeX, margin-4)
         lastStrs[0] = timeStr
         if counter % 100 == 0:
@@ -230,21 +229,21 @@ background = [
 "                                                                ",
 "                                                                ",
 "                                                                ",
-"                                                                ",
-"                                                                ",
-"                                                                ",
-"                                                                ",
-"                                                                ",
-"                                                                ",
-"                                                                ",
-"                                                                ",
-"                                                                ",
-"                                                                ",
-"                                                                ",
-"                                                                ",
-"                                                                ",
-"                                                                ",
-"                                                                ",
+"                                                               7",
+"                                                               7",
+"                                                               7",
+"                                                               7",
+"                                                               7",
+"                                                               7",
+"                                                               7",
+"                                                               7",
+"                                                               7",
+"                                                               7",
+"                                                               7",
+"                                                               7",
+"                                                               7",
+"                                                               7",
+"7777777777777777777777777777777777777777777777777777777777777777",
 "                                                                ",
 "                                                                ",
 ".+@@+.....#@...#@@#...#@@#....$@%..                             ",
@@ -315,6 +314,7 @@ def main():
                                                    font_name=font,
                                                    bg=0, fg=2, palette=palette)
     wmdocklib.openXwindow(sys.argv, width, height)
+    wmdocklib.copyXPMArea(64+2*xOffset+1, 27, width - 2*xOffset, 17, xOffset, yOffset)
     mainLoop(timeFmt, dateFmt, dayFmt, weekFmt)
 
 if __name__ == '__main__':
