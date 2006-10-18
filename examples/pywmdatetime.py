@@ -62,7 +62,7 @@ dayDefaultFormat = '%A'
 weekDefaultFormat = 'wk %q'  # %q added by Kristoffer for different week calculation.
 
 defaultConfigFile = '~/.pywmdatetimerc'
-maxCharsPerLine = 9
+maxCharsPerLine = None
 
 def addString(s, x, y):
     try:
@@ -166,9 +166,10 @@ def mainLoop(timeFmt, dateFmt, dayFmt, weekFmt):
         timeStr = time.strftime(timeFmt, lt)[:maxCharsPerLine]
         margin = 6
         spacing = getVertSpacing(4, margin)
-        timeX = getCenterStartPos(timeStr)
+        timeX = 3
         if lastStrs[0] != timeStr:
             addTimeString(timeStr, timeX, margin-4)
+        margin = 8
         lastStrs[0] = timeStr
         if counter % 100 == 0:
             # We only perform the date/week checks/updates once every 100th
@@ -309,10 +310,11 @@ def main():
     
     font = clConfig.get('font', '6x8orig')
     
-    global char_width, char_height
+    global char_width, char_height, maxCharsPerLine
     char_width, char_height = wmdocklib.initPixmap(background,
                                                    font_name=font,
                                                    bg=0, fg=2, palette=palette)
+    maxCharsPerLine = (width-2*xOffset) / char_width
     wmdocklib.openXwindow(sys.argv, width, height)
     wmdocklib.copyXPMArea(64+2*xOffset+1, 27, width - 2*xOffset, 17, xOffset, yOffset)
     mainLoop(timeFmt, dateFmt, dayFmt, weekFmt)
