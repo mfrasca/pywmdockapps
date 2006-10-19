@@ -90,9 +90,13 @@ def addChar(ch, x, y, xOffset, yOffset, width, height):
 
     if not (32 <= ord(ch) <= 127):
         raise ValueError, "Unsupported Char: '%s'(%d)" % (ch, ord(ch))
-    stringsize = 128 - (128 % char_width)
+    # linelength is the amount of bits the character set uses on each row.
+    linelength = 128 - (128 % char_width)
+    # pos is the horizontal index of the box containing ch.
     pos = (ord(ch)-32) * char_width
-    chY, chX = (pos / stringsize) * char_height + 64, pos % stringsize
+    # translate pos into chX, chY, rolling back and down each linelength
+    # bits.  character definition start at row 64, column 0.
+    chY, chX = (pos / linelength) * char_height + 64, pos % linelength
     targX = x + xOffset
     targY = y + yOffset
     pywmgeneral.copyXPMArea(chX, chY, char_width, char_height, targX, targY)
