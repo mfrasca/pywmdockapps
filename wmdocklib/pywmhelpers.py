@@ -26,9 +26,12 @@ Some changes to handle the additional event handling in pywmgeneral
 First workingish version
 """
 
-import os
-import re
+import os, re, types
 import ConfigParser
+
+charset_start = None
+charset_width = None
+pattern_start = None
 
 import pywmgeneral
 defaultRGBFileList = [
@@ -91,12 +94,13 @@ def addChar(ch, x, y, xOffset, yOffset, width, height):
     if not (32 <= ord(ch) <= 127):
         raise ValueError, "Unsupported Char: '%s'(%d)" % (ch, ord(ch))
     # linelength is the amount of bits the character set uses on each row.
-    linelength = 128 - (128 % char_width)
+    linelength = charset_width - (charset_width % char_width)
     # pos is the horizontal index of the box containing ch.
     pos = (ord(ch)-32) * char_width
     # translate pos into chX, chY, rolling back and down each linelength
     # bits.  character definition start at row 64, column 0.
-    chY, chX = (pos / linelength) * char_height + 64, pos % linelength
+    chY = (pos / linelength) * char_height + charset_start
+    chX = pos % linelength
     targX = x + xOffset
     targY = y + yOffset
     pywmgeneral.copyXPMArea(chX, chY, char_width, char_height, targX, targY)
@@ -143,12 +147,14 @@ def readXPM(fileName):
         break
     return res
 
-def initPixmap(xpm_background=None,
-               font_name='6x8',
-               bg=0, fg=7,
+def initPixmap(background=None,
+               patterns=None,
+               style='3d',
                width=64, height=64,
                margin=3,
-               palette=None):
+               font_name='6x8',
+               bg=0, fg=7,
+               palette=None, debug = 0):
     """builds and sets the pixmap of the program. 
 
     a wmdockapp has a 128x112 pixmap
@@ -205,12 +211,42 @@ def initPixmap(xpm_background=None,
     if isinstance(fg, int):
         fg = '%x' % fg
 
-    if xpm_background is None:
-        xpm_background = [bg*width]*height
+    if patterns is None:
+        patterns = [bg*width]*height
+
+    if style == '3d': ex = '7'
+    else: ex = bg
+    
+    if background is None:
+        background = [
+            ' '*width
+            for item in range(margin)
+            ] + [
+            ' '*margin + bg*(width-2*margin-1) + ex + ' '*(margin)
+            for item in range(margin,height-margin-1)
+            ] + [
+            ' '*margin + ex*(width-2*margin) + ' '*(margin)
+            ] + [
+            ' '*width for item in range(margin)
+            ]
+    elif isinstance(background, types.ListType):
+        nbackground = [[' ']*width for i in range(height)]
+        for ((left, top),(right, bottom)) in background:
+            for x in range(left, right+1):
+                for y in range(top, bottom):
+                    if x < right:
+                        nbackground[y][x] = bg
+                    else:
+                        nbackground[y][x] = ex
+                nbackground[bottom][x] = ex
+        background = [ ''.join(item) for item in nbackground ]
 
     global tile_width, tile_height
     tile_width = width
     tile_height = height
+
+    global pattern_start
+    pattern_start = height
 
     def readFont(font_name):
         # read xpm, skip header and color definitions, fill/trim to 48 lines.
@@ -227,25 +263,28 @@ def initPixmap(xpm_background=None,
         
     global char_width, char_height
     char_width, char_height, fontdef = readFont(font_name)
+
+    global charset_start, charset_width
+    charset_start = height + len(patterns)
+    charset_width = len(fontdef[0])
+
+    xpmwidth = max(len(background[0]), len(patterns[0]), len(fontdef[0]))
+    xpmheight = len(background)+len(patterns)+len(fontdef)
     
     xpm = [
-        '128 112 %d 1' % (1+len(palette)),
+        '%s %s %d 1' % (xpmwidth, xpmheight, 1+len(palette)),
         ] + [
         ' \tc black'
         ] + [
         '%s\tc %s' % (k,v)
         for k,v in palette.items()
         ] + [
-        ' '*width + item[:128-width] for item in xpm_background[:margin]
+        item+' '*(xpmwidth-len(item)) for item in background + patterns
         ] + [
-        ' '*margin+bg*(width-margin-margin-2)+' '*(margin+2) + item[:128-width] for item in xpm_background[margin:-margin-1]
-        ] + [
-        ' '*width + item[:128-width] for item in xpm_background[-margin-1:]
-        ] + [
-        line.replace('%', fg).replace(' ', bg)
+        line.replace('%', fg).replace(' ', bg) + ' '*(xpmwidth-len(line))
         for line in fontdef
         ]
-    if 0:
+    if debug:
         print '/* XPM */\nstatic char *_x_[] = {'
         for item in xpm:
             print '"%s",' % item

@@ -159,7 +159,7 @@ def addString(s, x, y):
 
 def clearLine(y):
     """Clear a line of text at position y."""
-    wmdocklib.copyXPMArea(72, yOffset,
+    wmdocklib.copyXPMArea(0, 64+yOffset,
                           width - 2 * xOffset, char_height,
                           xOffset, y + yOffset)
 
@@ -663,7 +663,7 @@ def main():
     sys.argv[0] = programName
 
     global char_width, char_height
-    char_width, char_height = wmdocklib.initPixmap(background,
+    char_width, char_height = wmdocklib.initPixmap(patterns=background,
                                                    font_name=font,
                                                    bg='_', fg='%',
                                                    palette=palette)

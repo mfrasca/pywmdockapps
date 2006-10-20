@@ -68,11 +68,11 @@ graphStartX = 7
 graphStartY = 53
 graphHeight = 4
 
-graphBgStartX = 72
-graphBgStartY = 53
+graphBgStartX = 72-64
+graphBgStartY = 53+64
 
-graphLineStartX = 66
-graphLineStartY = 58
+graphLineStartX = 2
+graphLineStartY = 58+64
 
 defaultConfigFile = os.environ['HOME']+'/.pywmhdmonrc'
 defaultProcStat = '/proc/stat'
@@ -415,7 +415,7 @@ def main():
     font = clConfig.get('font', '6x8')
 
     global char_width, char_height
-    char_width, char_height = wmdocklib.initPixmap(background,
+    char_width, char_height = wmdocklib.initPixmap(patterns=patterns,
                                                    font_name=font,
                                                    palette=palette,
                                                    bg=0, fg=2)
@@ -464,7 +464,7 @@ def main():
     hdmon = PywmHDMon(pathsToMonitor, procStat, actMonEnabled, skipping)
     hdmon.mainLoop()
 
-background = \
+patterns = \
 ['0000000000000000000000000000000000000000000000000000000000000000',
  '0000000000000000000000000000000000000000000000000000000000000000',
  '0077700555002220055500555000000000000000000000000000000000000000',
