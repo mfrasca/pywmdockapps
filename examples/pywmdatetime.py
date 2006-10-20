@@ -172,7 +172,7 @@ def mainLoop(timeFmt, dateFmt, dayFmt, weekFmt):
             spacing = getVertSpacing(4, margin)
             if lastStrs[0] != timeStr:
                 addTimeString(timeStr, timeX, margin-4)
-            margin += 2
+            margin += 3
         else:
             margin = 4
             spacing = getVertSpacing(4, margin)
@@ -265,8 +265,8 @@ def main():
     font = clConfig.get('font', '6x8orig')
 
     if clConfig.get('antialiased'):
-        background = [((3,3),(60,18)),
-                      ((3,21),(60,60))]
+        background = [((3,3),(60,19)),
+                      ((3,22),(60,60))]
     else:
         background = [((3,3),(60,60))]
     
@@ -279,8 +279,6 @@ def main():
     antialiased = clConfig.get('antialiased', False)
 
     wmdocklib.openXwindow(sys.argv, width, height)
-    if antialiased:
-        wmdocklib.copyXPMArea(64+2*xOffset+1, 27, width - 2*xOffset, 17, xOffset, yOffset)
     mainLoop(timeFmt, dateFmt, dayFmt, weekFmt)
 
 if __name__ == '__main__':
