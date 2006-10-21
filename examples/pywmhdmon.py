@@ -62,7 +62,7 @@ width = 64
 height = 64
 
 xOffset = 4
-yOffset = 4
+yOffset = 5
 
 graphStartX = 7
 graphStartY = 53
@@ -89,11 +89,12 @@ class PywmHDMon:
         self._pathsToMonitor = pathsToMonitor
         self._actMonEnabled = actMonEnabled
         self._skipping = skipping
+        self._lineCount = (height - yOffset*2 - 2) / (char_height+1)
 
         self._statFile = procStat
         self._maxIODiff = 0
         self._lastIO = -1
-        for i in range(len(self._pathsToMonitor)):
+        for i in range(max(self._lineCount, len(pathsToMonitor)-skipping)):
             wmdocklib.addMouseRegion(i+1, 8, self.getY(i+1)+yOffset,
                                      58, self.getY(i+1)+char_height+yOffset)
 
@@ -150,10 +151,11 @@ class PywmHDMon:
 
     def getY(self, line):
         "returns the y coordinate of the top line for the box"
-        lineCount = (height - yOffset*2) / (char_height+2)
-        interlinea = (height - yOffset*2) / lineCount
-        lastBaseline = yOffset + lineCount * interlinea
-        extraYOffset = (height - yOffset - lastBaseline) / 2
+        interlinea = (height - yOffset*2 - 2 - self._lineCount * char_height) / (self._lineCount-1)
+        interlinea += char_height
+        lastBaseline = yOffset + self._lineCount * interlinea
+        from math import ceil
+        extraYOffset = int(ceil((height - yOffset - lastBaseline) / 2.0))
         return extraYOffset + (line - 1) * interlinea
 
     def paintLabel(self, line, label):
@@ -163,7 +165,7 @@ class PywmHDMon:
         total, free = data
         xStart = (width*2)/5
         if total==0:
-            self.addString('     ', xStart, self.getY(line))
+            self.addString('     ', width-yOffset*2-5*char_width-1, self.getY(line))
             self.paintGraph(0, xStart, self.getY(line) + 4, 
                             width - xOffset*2 - xStart - 2,
                             thin=1)
@@ -285,7 +287,7 @@ class PywmHDMon:
                     "Can't get hd data from %s: %s\n" % (path, str(e)))
                     hdData = (0, 0)
                 self.paintHdData(index-pageoffset, hdData, mode)
-            if index - pageoffset == 5:
+            if index - pageoffset == self._lineCount:
                 break
 
     def mainLoop(self):
