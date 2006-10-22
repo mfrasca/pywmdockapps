@@ -265,10 +265,10 @@ def main():
     font = clConfig.get('font', '6x8orig')
 
     if clConfig.get('antialiased'):
-        background = [((3,3),(60,19)),
+        background = [((6,3),(57,19)),
                       ((3,22),(60,60))]
     else:
-        background = [((3,3),(60,60))]
+        background = [((3,3),(59,60))]
     
     global char_width, char_height, maxCharsPerLine, antialiased
     char_width, char_height = wmdocklib.initPixmap(patterns=patterns,
