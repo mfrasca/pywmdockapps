@@ -12,19 +12,25 @@
 href="http://www.windowmaker.org">WindowMaker</a>, <a
 href="http://dockapps.org">dockapps</a> and <a
 href="http://www.python.org">Python</a>.  
-
-WindowMaker dockapps are graphical applications fitting in a 64x64 tile.
-they can work in WindowMaker or any other window manager which can handle
-WindowMaker style dockapps.  The project pywmdockapps contains a Python
-library -wmdocklib- enabling quick development of your own dockapps plus a
-small collection of usable examples.
 </p>
 
-<p>the included examples are quite untested.  they may work quite well, may
-not work at all, may set your computer in flames, even though this is not
-the most likely event among the three but you have been warned.  the one on
-which most work has been performed is pywmhdmon, but this too is no
-guarantee for better functioning.
+<p>
+WindowMaker dockapps are graphical applications fitting in a 64x64 tile.
+they can work in WindowMaker or any other window manager which can handle
+WindowMaker style dockapps; typically: Gome or fvwm.
+</p>
+
+<p>
+pywmdockapps is a sourceforge hosted project containing a Python library
+-wmdocklib- and a small collection of rather usable examples.
+</p>
+
+<p>although some of the included examples are untested, some others are used
+and maintained by the project coordinator.  non eof them comes with any
+guarantee: they may work well, not work at all, set your computer in flames.
+even though no such event has yet been reported, you have been warned.  the
+ones Mario Frasca uses all the time are pywmdatetime (removed wmCalClock in
+its favour) and pywmhdmon.
 </p>
 
 <p>
@@ -33,8 +39,9 @@ as possible to each other and with no excessive graphics. Since they are
 written in Python, it shouldn't be too hard to change something you do not
 like about them.  if you do modify things according to your needs and tastes
 or if you simply try things out, please share your opinions/changes with the
-community, by sending a comment, suggestion, or just drop a note to say that
-you have tried it.  see contact information at the bottom of this page.  </p>
+community, by sending a comment, suggestion, patch (highly appreciated), or
+just drop a note to say that you have tried it.  see contact information at
+the bottom of this page.  </p>
 
 <p>you may also consider filing a <a
 href="http://sourceforge.net/tracker/?group_id=147660&atid=769418">bug</a>
@@ -47,6 +54,29 @@ will be processed quickly (a matter of 3/5 days).
 <hr>
 
 <h3>News</h3>
+
+<p class="newsdate">2006-10-22</p>
+
+<p class="newstext">radically restyled the initialation of the xpm.  the
+three parts of which it is composed (drawing area, patterns, charset) are
+now one on top of the other.  the client application does not need take care
+of making the three components of equal width nor of any specific length:
+it's the library fixing and keeping track of this kind of things.
+</p>
+
+<p>the 'background' parameter for the initialization function can be a
+static pixel map, (in this case the space character is reserved for
+specifying transparency), or can be left blank (then the pixel map is
+constructed with 'margin' transparent pixels all around) or you may give a
+list of 'viewports': rectangular holes you want to dig in the otherwise
+transparent pixel map.
+</p>
+
+<p>use the initialization interactively and give 'debug=True' to see the
+constructed xpm.  you may save it in a file and view it with your favourite
+graphics viewer.  there are versions of emacs (e.g.: CVS Emacs on Mac OS X)
+where you can view a buffer 'graphically' just by hitting C-c C-c.
+</p>
 
 <p class="newsdate">2006-10-13</p>
 <p class="newstext">we are now at version 1.11.  the library can be
@@ -105,8 +135,10 @@ some other usable methods are provided there.
 <img src="pictures/pywmdatetime.png" alt="pywmdatetime">
 <img src="pictures/pywmdatetime-fonts.png" alt="pywmdatetime">
 <img src="pictures/pywmdatetime-antialiased.png" alt="pywmdatetime">
-<p>Pywmdatetime is a dockapp that displays the current time, date, weekday and
-week number. Formats and colours and font are easily configured. </p>
+<p>Pywmdatetime is a dockapp that displays the current time, date, weekday
+and week number. Formats and colours and font are easily configured.  The
+application contains an antialiased font for digits, which is used if the
+option '-a' is used.</p>
 <p>Changes:</p>
 <p class="newsdate">2003-09-01</p>
 <p class="newstext">Fixed a bug where the week didn't update if we used %q style week numbering.</p>
