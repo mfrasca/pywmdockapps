@@ -250,7 +250,13 @@ def initPixmap(background=None,
 
     def readFont(font_name):
         # read xpm, skip header and color definitions, fill/trim to 48 lines.
+        font_palette = {}
         fontdef = readXPM(__file__[:__file__.rfind(os.sep) + 1] + font_name + '.xpm')
+        colorCount = int(fontdef[0].split(' ')[2])
+        for i in range(colorCount):
+            colorChar = fontdef[i+1][0]
+            colorName = fontdef[i+1][1:].split()[1]
+            font_palette[colorChar] = colorName
         fontdef = fontdef[1 + int(fontdef[0].split(' ')[2]):]
         fontdef = (fontdef + [' '*128]*48)[:48]
 
@@ -259,10 +265,11 @@ def initPixmap(background=None,
         if not m:
             raise ValueError("can't infer font size from name (does not contain wxh)")
         width, height = [int(item) for item in m.groups()]
-        return width, height, fontdef
+        return width, height, fontdef, font_palette
         
     global char_width, char_height
-    char_width, char_height, fontdef = readFont(font_name)
+    char_width, char_height, fontdef, font_palette = readFont(font_name)
+    palette.update(font_palette)
 
     global charset_start, charset_width
     charset_start = height + len(patterns)

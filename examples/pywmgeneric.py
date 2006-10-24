@@ -643,11 +643,17 @@ def main():
         '#': '#9E79A2899E79',
         '$': '#410341034103',
         }
+
     palette['o'] = clConfig.get('indicator', '#2020b2b2aaaa')
     palette['/'] = clConfig.get('graph', '#2020b2b2aaaa')
     palette['-'] = clConfig.get('graphbg', '#707070707070')
-    palette['_'] = clConfig.get('background', '#000000000000')
+    palette['_'] = clConfig.get('background', '#FFFFFFFFFFFF')
     palette['%'] = clConfig.get('text', '#2081B2CAAEBA')
+
+    palette['.'] = 'grey95'
+    palette['x'] = 'black'
+    palette['o'] = 'grey45'
+    palette['-'] = 'grey65'
 
     font = clConfig.get('font', '6x8')
 
