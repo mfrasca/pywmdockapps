@@ -650,11 +650,6 @@ def main():
     palette['_'] = clConfig.get('background', '#FFFFFFFFFFFF')
     palette['%'] = clConfig.get('text', '#2081B2CAAEBA')
 
-    palette['.'] = 'grey95'
-    palette['x'] = 'black'
-    palette['o'] = 'grey45'
-    palette['-'] = 'grey65'
-
     font = clConfig.get('font', '6x8')
 
     configFile = clConfig.get('configfile', defaultConfigFile)
