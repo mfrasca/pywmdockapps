@@ -83,7 +83,7 @@ def addTimeString(s, x, y):
         if not c.isdigit():
             charX = 70
             charW = 3
-        wmdocklib.copyXPMArea(charX, charY, charW, 10, x+xOffset, y+yOffset)
+        wmdocklib.copyXPMArea(charX, charY, charW, 10, x+xOffset+1, y+yOffset)
         x += charW
 
 def clearLine(y):
