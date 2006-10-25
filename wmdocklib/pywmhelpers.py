@@ -157,8 +157,6 @@ def initPixmap(background=None,
                palette=None, debug = 0):
     """builds and sets the pixmap of the program. 
 
-    a wmdockapp has a 128x112 pixmap
-
     the (width)x(height) upper left area is the work area in which we put
     what we want to be displayed.
 
@@ -258,7 +256,6 @@ def initPixmap(background=None,
             colorName = fontdef[i+1][1:].split()[1]
             font_palette[colorChar] = colorName
         fontdef = fontdef[1 + int(fontdef[0].split(' ')[2]):]
-        fontdef = (fontdef + [' '*128]*48)[:48]
 
         import re
         m = re.match(r'.*([0-9]+)x([0-9]+).*', font_name)
