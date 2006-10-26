@@ -55,28 +55,39 @@ will be processed quickly (a matter of 3/5 days).
 
 <h3>News</h3>
 
+<p class="newsdate">2006-10-26</p>
+
+<p class="newstext">released a few constraints.  the font can be
+antialiased (the colour is interpreted as levels of gray and the resulting
+effect is an interpolation between background and text-foreground);
+the set of patterns and the character set may be each reasonable size;
+some of the programs accept a --debug option, in which case they also
+output the xpm to stdout;  clashes in symbols used in character definition
+xpm and patterns are resolved by the library.  the ' ' (space) is still
+reserved for the transparency; all 0..9,a..f are still reserved for
+'built in' colours.  </p>
+
 <p class="newsdate">2006-10-22</p>
 
-<p class="newstext">radically restyled the initialation of the xpm.  the
+<p class="newstext">radically restyled the initialization of the xpm.  the
 three parts of which it is composed (drawing area, patterns, charset) are
 now one on top of the other.  the client application does not need take care
 of making the three components of equal width nor of any specific length:
 it's the library fixing and keeping track of this kind of things.
 </p>
 
-<p>the 'background' parameter for the initialization function can be a
-static pixel map, (in this case the space character is reserved for
-specifying transparency), or can be left blank (then the pixel map is
-constructed with 'margin' transparent pixels all around) or you may give a
-list of 'viewports': rectangular holes you want to dig in the otherwise
-transparent pixel map.
-</p>
+<p class="newstext">the 'background' parameter for the initialization
+function can be a static pixel map, (in this case the space character is
+reserved for specifying transparency), or can be left blank (then the
+pixel map is constructed with 'margin' transparent pixels all around)
+or you may give a list of 'viewports': rectangular holes you want to
+dig in the otherwise transparent pixel map.  </p>
 
-<p>use the initialization interactively and give 'debug=True' to see the
-constructed xpm.  you may save it in a file and view it with your favourite
-graphics viewer.  there are versions of emacs (e.g.: CVS Emacs on Mac OS X)
-where you can view a buffer 'graphically' just by hitting C-c C-c.
-</p>
+<p class="newstext">use the initialization interactively and give
+'debug=True' to see the constructed xpm.  you may save it in a file and
+view it with your favourite graphics viewer.  there are versions of emacs
+(e.g.: CVS Emacs on Mac OS X) where you can view a buffer 'graphically'
+just by hitting C-c C-c.  </p>
 
 <p class="newsdate">2006-10-13</p>
 <p class="newstext">we are now at version 1.11.  the library can be
@@ -155,6 +166,9 @@ painted.
 <img src="pictures/angelico-unmounted.png" alt="pywmhdmon">
 <img src="pictures/angelico-mounted.png" alt="pywmhdmon">
 <img src="pictures/croese-mounted.png" alt="pywmhdmon">
+<img src="pictures/hdmon-41.png" alt="pywmhdmon">
+<img src="pictures/hdmon-41-blue-yellow.png" alt="pywmhdmon">
+<img src="pictures/hdmon-41-purple-black.png" alt="pywmhdmon">
 <p>Pywmhdmon is a dockapp that monitors the free space of up to five of your
 filesystems (per instance). the fifth line can be set to contain a little
 bar that displays the current hard drive activity.</p>
