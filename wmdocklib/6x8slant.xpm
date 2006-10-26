@@ -2,8 +2,8 @@
 static char *square_[] = {
 /* columns rows colors chars-per-pixel */
 "128 40 2 1",
-"% c black",
-"  c gray100",
+"  c None",
+"% c gray100",
 /* pixels */
 "        %    %  %         %   %%   % %        %    %   %      %                                 %%%%%   %   %%%%% %%%%% %   %   ",
 "        %    %  %  % %  %%%%% %%  %%% %      %    %     %   % % %   %                         % %   %  %%   %   % %   % %   %   ",

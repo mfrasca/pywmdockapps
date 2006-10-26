@@ -310,7 +310,7 @@ def parseCommandLine(argv):
     shorts = 'ht:f:g:b:r:c:p:s:F:'
     longs = ['help', 'textcolor=', 'background=', 'barfgcolor=',
              'rgbfile=', 'configfile=', 'barbgcolor=', 'procstat=',
-             'skipconf=','font=']
+             'skipconf=','font=', 'debug']
     try:
         opts, nonOptArgs = getopt.getopt(argv[1:], shorts, longs)
     except getopt.GetoptError, e:
@@ -340,6 +340,8 @@ def parseCommandLine(argv):
             d['procstat'] = a
         if o in ('-s', '--skipconf'):
             d['skipconf'] = a
+        if o in ('--debug'):
+            d['debug'] = True
     return d
 
 def makeNumDigits(num, numDigits):
@@ -420,12 +422,14 @@ def main():
     palette['-'] = 'grey65'
 
     font = clConfig.get('font', '6x8')
+    debug = clConfig.get('debug')
 
     global char_width, char_height
     char_width, char_height = wmdocklib.initPixmap(patterns=patterns,
                                                    font_name=font,
                                                    palette=palette,
-                                                   bg=0, fg=2)
+                                                   margin=3,
+                                                   bg=0, fg=2, debug=debug)
 
     pathsToMonitor = []
     for i in range(1,1000):

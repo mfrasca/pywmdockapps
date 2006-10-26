@@ -38,6 +38,7 @@ Available options are:
 -e, --weekformat <format>       set the week format
 -r, --rgbfile <file>            set the rgb file to get color codes from
 -c, --configfile <file>         set the config file to use
+--debug                         shows the pixmap
 
 The formats are the same as Python's strftime() accept. See the sample
 rc-file for more information about this.
@@ -113,7 +114,8 @@ def calculateWeek(localTime):
 def parseCommandLine(argv):
     """Parse the commandline. Return a dictionary with options and values."""
     shorts = 'hf:b:t:d:e:y:r:c:F:a'
-    longs = ['antialiased', 'help', 'foreground=', 'background=', 'timeformat=', 'dateformat=',
+    longs = ['antialiased', 'help', 'foreground=', 'background=',
+             'timeformat=', 'dateformat=', 'debug',
              'weekdayformat=', 'weekformat=', 'rgbfile=', 'configfile=', 'font=']
     try:
         opts, nonOptArgs = getopt.getopt(argv[1:], shorts, longs)
@@ -147,6 +149,8 @@ def parseCommandLine(argv):
             d['rgbfile'] = a
         if o in ('-c', '--configfile'):
             d['configfile'] = a
+        if o in ('--debug'):
+            d['debug'] = True
     return d
 
 def checkForEvents():
@@ -269,12 +273,15 @@ def main():
                       ((3,22),(60,60))]
     else:
         background = [((3,3),(59,60))]
+
+    debug = clConfig.get('debug')
     
     global char_width, char_height, maxCharsPerLine, antialiased
     char_width, char_height = wmdocklib.initPixmap(patterns=patterns,
                                                    font_name=font,
                                                    bg=0, fg=2, palette=palette,
-                                                   background=background)
+                                                   background=background,
+                                                   debug=debug)
     maxCharsPerLine = (width-2*xOffset) / char_width
     antialiased = clConfig.get('antialiased', False)
 

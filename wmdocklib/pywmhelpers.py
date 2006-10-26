@@ -179,6 +179,9 @@ def initPixmap(background=None,
     The XBM mask is created out of the XPM.
     """
 
+    # initially all characters 32-126 are available...
+    available = dict([(chr(ch), True) for ch in range(32,127)])
+
     # a palette is a dictionary from one single letter to an hexadecimal
     # colour.  per default we offer a 16 colours palette including what I
     # consider the basic colours:
@@ -190,9 +193,12 @@ def initPixmap(background=None,
     alter_palette, palette = palette, {}
     for name, index in zip(basic_colours, range(16)):
         palette['%x'%index] = getColorCode(name)
+        available['%x'%index] = False
+    palette[' '] = 'None'
+    available[' '] = False
 
-    # palette = {'0':..., '1':..., ..., 'f':...}
-    
+    # palette = {' ': None, '0':..., '1':..., ..., 'f':...}
+
     if alter_palette is not None:
         # alter_palette contains 0..15/chr -> 'name'/'#hex'
         # interpret that as chr -> '#hex'
@@ -203,6 +209,7 @@ def initPixmap(background=None,
             if not v.startswith('#'):
                 v = getColorCode(v)
             palette[k] = v
+            available[k] = False
 
     if isinstance(bg, int):
         bg = '%x' % bg
@@ -247,7 +254,7 @@ def initPixmap(background=None,
     pattern_start = height
 
     def readFont(font_name):
-        # read xpm, skip header and color definitions, fill/trim to 48 lines.
+        # read xpm, return cell_size, definition and palette.
         font_palette = {}
         fontdef = readXPM(__file__[:__file__.rfind(os.sep) + 1] + font_name + '.xpm')
         colorCount = int(fontdef[0].split(' ')[2])
@@ -262,10 +269,51 @@ def initPixmap(background=None,
         if not m:
             raise ValueError("can't infer font size from name (does not contain wxh)")
         width, height = [int(item) for item in m.groups()]
+
+        replace = []
+        for code, value in font_palette.items():
+            if not available[code] and palette[code] != font_palette[code]:
+                newcode = [k for k in available if available[k]][0]
+                available[newcode] = False
+                replace.append((code, newcode))
+        for code, newcode in replace:
+            for row, i in zip(fontdef,range(len(fontdef))):
+                fontdef[i] = row.replace(code, newcode)
+            font_palette[newcode] = font_palette[code]
+            del font_palette[code]
         return width, height, fontdef, font_palette
+
+    def calibrateFontPalette(font_palette, fg, bg):
+        """computes modified font_palette
+
+        takes into account only intensity of original value.
+
+        fg, bg must be of the form #xxxxxx
+
+        the corresponding calibrated colour lies at a specific percentage of
+        the vector going from background to foreground."""
+
+        bg_point = [int(bg[i*2+1:i*2+3],16) for i in range(3)]
+        fg_point = [int(fg[i*2+1:i*2+3],16) for i in range(3)]
+
+        fg_vec = [f-b for (f,b) in zip(fg_point,bg_point)]
+
+        new_font_palette = {}
+        for k, colourName in font_palette.items():
+            if colourName == 'None':
+                continue
+            origColour = getColorCode(colourName)[1:]
+            origRgb = [int(origColour[i*2:i*2+2],16)/256. for i in range(3)]
+            intensity = sum(origRgb) / 3
+            newRgb = [i * intensity + base for i,base in zip(fg_vec, bg_point)]
+            new_font_palette[k] = '#'+''.join(["%02x"%i for i in newRgb])
+        
+        return new_font_palette
         
     global char_width, char_height
     char_width, char_height, fontdef, font_palette = readFont(font_name)
+    font_palette = calibrateFontPalette(font_palette, palette[fg], palette[bg])
+    
     palette.update(font_palette)
 
     global charset_start, charset_width
@@ -276,14 +324,18 @@ def initPixmap(background=None,
     xpmheight = len(background)+len(patterns)+len(fontdef)
     
     xpm = [
-        '%s %s %d 1' % (xpmwidth, xpmheight, 1+len(palette)),
-        ] + [
-        ' \tc black'
+        '%s %s %d 1' % (xpmwidth, xpmheight, len(palette)),
         ] + [
         '%s\tc %s' % (k,v)
         for k,v in palette.items()
+        if v == 'None'
         ] + [
-        item+' '*(xpmwidth-len(item)) for item in background + patterns
+        '%s\tc %s' % (k,v)
+        for k,v in palette.items()
+        if v != 'None'
+        ] + [
+        item+' '*(xpmwidth-len(item))
+        for item in background + patterns
         ] + [
         line.replace('%', fg).replace(' ', bg) + ' '*(xpmwidth-len(line))
         for line in fontdef

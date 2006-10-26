@@ -513,7 +513,8 @@ class PywmGeneric:
 def parseCommandLine(argv):
     """Parse the commandline. Return a dictionary with options and values."""
     shorts = 'ht:b:r:c:F:'
-    longs = ['help', 'text=', 'background=', 'rgbfile=', 'configfile=', 'font=']
+    longs = ['help', 'text=', 'background=', 'rgbfile=', 'configfile=',
+             'font=', 'debug']
     try:
         opts, nonOptArgs = getopt.getopt(argv[1:], shorts, longs)
     except getopt.GetoptError, e:
@@ -535,6 +536,8 @@ def parseCommandLine(argv):
             d['rgbfile'] = a
         if o in ('-c', '--configfile'):
             d['configfile'] = a
+        if o in ('--debug'):
+            d['debug'] = True
     return d
 
 def readConfigFile(fileName):
@@ -634,21 +637,20 @@ def main():
     clConfig = parseCommandLine(sys.argv)
 
     palette = {
-        ' ': '#208120812081',
-        '.': '#00000000FFFF',
-        'o': '#C71BC30BC71B',
-        'O': '#861782078E38',
-        '+': '#EFBEF3CEEFBE',
-        '@': '#618561856185',
-        '#': '#9E79A2899E79',
-        '$': '#410341034103',
+        '.': '#0000FF',
+        'o': '#C7C3C7',
+        'O': '#86828E',
+        '+': '#EFF3EF',
+        '@': '#616161',
+        '#': '#9EA29E',
+        '$': '#414141',
         }
 
-    palette['o'] = clConfig.get('indicator', '#2020b2b2aaaa')
-    palette['/'] = clConfig.get('graph', '#2020b2b2aaaa')
-    palette['-'] = clConfig.get('graphbg', '#707070707070')
-    palette['_'] = clConfig.get('background', '#FFFFFFFFFFFF')
-    palette['%'] = clConfig.get('text', '#2081B2CAAEBA')
+    palette['o'] = clConfig.get('indicator', '#20b2aa')
+    palette['/'] = clConfig.get('graph', '#20b2aa')
+    palette['-'] = clConfig.get('graphbg', '#707070')
+    palette['_'] = clConfig.get('background', '#FFFFFF')
+    palette['%'] = clConfig.get('text', '#20B2AE')
 
     font = clConfig.get('font', '6x8')
 

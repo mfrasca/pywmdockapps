@@ -2,8 +2,8 @@
 static char *_x__[] = {
 /* columns rows colors chars-per-pixel */
 "192 36 2 1",
-"% c black",
-"  c gray100",
+"  c None",
+"% c gray100",
 /* pixels */
 "                                                   %   %                                                                                                                                        ",
 "        %    % %          %    %  %         %     %     %     %                               %   %     %    %%%  %%%%%    %  %%%%%  %%%  %%%%%  %%%   %%%                  %       %      %%%  ",
