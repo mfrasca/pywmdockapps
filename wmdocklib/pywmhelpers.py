@@ -399,6 +399,8 @@ def getColorCode(colorName, rgbFileName=None):
     if we find no match. The rgbFileName should be like the one found in
     /usr/lib/X11R6/rgb.txt on most sytems.
     """
+    if colorName.startswith('#'):
+        return colorName
 
     if rgbFileName is None:
         for fn in defaultRGBFileList:
