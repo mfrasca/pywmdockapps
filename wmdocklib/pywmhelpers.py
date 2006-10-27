@@ -127,10 +127,13 @@ def getVertSpacing(numLines, margin, height, yOffset):
 def readXPM(fileName):
     """Read the xpm in filename.
 
-    Return a list of strings containing the xpm. Raise IOError if we run
-    into trouble when trying to read the file. This function surely
-    doesn't handle all XPMs, but it handles the ones I use, so that'll
-    do.
+    Return the pair (palette, pixels).
+
+    palette is a dictionary char->color (no translation attempted).
+    pixels is a list of strings.
+
+    Raise IOError if we run into trouble when trying to read the file.  This
+    function has not been tested extensively.  do not try to use more than 
     """
     f = file(fileName, 'r')
     lines = [l.rstrip('\n') for l in f.readlines()]
@@ -145,7 +148,17 @@ def readXPM(fileName):
                 s = s[nextStrEnd+1:]
                 continue
         break
-    return res
+
+    palette = {}
+    colorCount = int(res[0].split(' ')[2])
+    charsPerColor = int(res[0].split(' ')[3])
+    assert(charsPerColor == 1)
+    for i in range(colorCount):
+        colorChar = res[i+1][0]
+        colorName = res[i+1][1:].split()[1]
+        palette[colorChar] = colorName
+    res = res[1 + int(res[0].split(' ')[2]):]
+    return palette, res
 
 def initPixmap(background=None,
                patterns=None,
@@ -165,13 +178,13 @@ def initPixmap(background=None,
 
     the remaining lower area defines the character set.  this is initialized
     using the corresponding named character set.  a file with this name must
-    be found somewhere in the path.  the colours used in the xpm file for
+    be found somewhere in the path.  the colors used in the xpm file for
     the charset must be ' ' and '%'.  they will be changed here to bg and
     fg.
 
     palette is a dictionary
-    1: of integers <- [0..15] to colours.
-    2: of single chars to colours.
+    1: of integers <- [0..15] to colors.
+    2: of single chars to colors.
 
     a default palette is provided, and can be silently overwritten with the
     one passed as parameter.
@@ -183,15 +196,15 @@ def initPixmap(background=None,
     available = dict([(chr(ch), True) for ch in range(32,127)])
 
     # a palette is a dictionary from one single letter to an hexadecimal
-    # colour.  per default we offer a 16 colours palette including what I
-    # consider the basic colours:
-    basic_colours = ['black', 'blue3', 'green3', 'cyan3',
+    # color.  per default we offer a 16 colors palette including what I
+    # consider the basic colors:
+    basic_colors = ['black', 'blue3', 'green3', 'cyan3',
                      'red3', 'magenta3', 'yellow3', 'gray',
                      'gray41', 'blue1', 'green1', 'cyan1',
                      'red1', 'magenta1', 'yellow1', 'white']
 
     alter_palette, palette = palette, {}
-    for name, index in zip(basic_colours, range(16)):
+    for name, index in zip(basic_colors, range(16)):
         palette['%x'%index] = getColorCode(name)
         available['%x'%index] = False
     palette[' '] = 'None'
@@ -234,7 +247,7 @@ def initPixmap(background=None,
             ] + [
             ' '*width for item in range(margin)
             ]
-    elif isinstance(background, types.ListType):
+    elif isinstance(background, types.ListType) and not isinstance(background[0], types.StringTypes):
         nbackground = [[' ']*width for i in range(height)]
         for ((left, top),(right, bottom)) in background:
             for x in range(left, right+1):
@@ -255,14 +268,7 @@ def initPixmap(background=None,
 
     def readFont(font_name):
         # read xpm, return cell_size, definition and palette.
-        font_palette = {}
-        fontdef = readXPM(__file__[:__file__.rfind(os.sep) + 1] + font_name + '.xpm')
-        colorCount = int(fontdef[0].split(' ')[2])
-        for i in range(colorCount):
-            colorChar = fontdef[i+1][0]
-            colorName = fontdef[i+1][1:].split()[1]
-            font_palette[colorChar] = colorName
-        fontdef = fontdef[1 + int(fontdef[0].split(' ')[2]):]
+        font_palette, fontdef = readXPM(__file__[:__file__.rfind(os.sep) + 1] + font_name + '.xpm')
 
         import re
         m = re.match(r'.*([0-9]+)x([0-9]+).*', font_name)
@@ -290,7 +296,7 @@ def initPixmap(background=None,
 
         fg, bg must be of the form #xxxxxx
 
-        the corresponding calibrated colour lies at a specific percentage of
+        the corresponding calibrated color lies at a specific percentage of
         the vector going from background to foreground."""
 
         bg_point = [int(bg[i*2+1:i*2+3],16) for i in range(3)]
@@ -299,11 +305,11 @@ def initPixmap(background=None,
         fg_vec = [f-b for (f,b) in zip(fg_point,bg_point)]
 
         new_font_palette = {}
-        for k, colourName in font_palette.items():
-            if colourName == 'None':
+        for k, colorName in font_palette.items():
+            if colorName == 'None':
                 continue
-            origColour = getColorCode(colourName)[1:]
-            origRgb = [int(origColour[i*2:i*2+2],16)/256. for i in range(3)]
+            origColor = getColorCode(colorName)[1:]
+            origRgb = [int(origColor[i*2:i*2+2],16)/256. for i in range(3)]
             intensity = sum(origRgb) / 3
             newRgb = [i * intensity + base for i,base in zip(fg_vec, bg_point)]
             new_font_palette[k] = '#'+''.join(["%02x"%i for i in newRgb])

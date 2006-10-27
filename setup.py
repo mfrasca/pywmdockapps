@@ -29,6 +29,7 @@ setup(name="pywmdockapps",
                'examples/pywmhdmon.py',
                'examples/pywmseti.py',
                'examples/pywmsysmon.py',
+               'examples/pywmPhoto.py',
                'examples/pywmgeneric.py'],
       package_data={'wmdocklib': ['*.xpm']},
       ext_modules = [module1])
