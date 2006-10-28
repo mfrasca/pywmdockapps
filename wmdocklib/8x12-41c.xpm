@@ -1,7 +1,7 @@
 /* XPM */
 static char *_test[] = {
   "128 72 5 1",
-  "  c None",
+  "  c black",
   ". c grey5",
   "- c grey35",
   "o c grey55",
