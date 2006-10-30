@@ -277,8 +277,10 @@ def initPixmap(background=None,
         width, height = [int(item) for item in m.groups()]
 
         replace = []
-        for code, value in font_palette.items():
-            if not available[code] and palette[code] != font_palette[code]:
+        for code, value in [(code, value)
+                            for (code, value) in font_palette.items()
+                            if not available[code]]:
+            if palette[code] != font_palette[code]:
                 newcode = [k for k in available if available[k]][0]
                 available[newcode] = False
                 replace.append((code, newcode))
