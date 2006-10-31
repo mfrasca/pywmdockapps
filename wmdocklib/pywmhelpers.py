@@ -103,8 +103,11 @@ def addChar(ch, x, y, xOffset, yOffset, width, height):
     chX = pos % linelength
     targX = x + xOffset
     targY = y + yOffset
-    pywmgeneral.copyXPMArea(chX, chY, char_width, char_height, targX, targY)
-    return (char_width, char_height)
+    chW = char_width
+    if ch in "',.:;":
+        chW = char_twidth
+    pywmgeneral.copyXPMArea(chX, chY, chW, char_height, targX, targY)
+    return (chW, char_height)
 
 def addString(s, x, y, xOffset, yOffset, width, height):
     """Add a string at the given x and y positions.
@@ -269,10 +272,12 @@ def initPixmap(background=None,
         font_palette, fontdef = readXPM(__file__[:__file__.rfind(os.sep) + 1] + font_name + '.xpm')
 
         import re
-        m = re.match(r'.*([0-9]+)x([0-9]+).*', font_name)
+        m = re.match(r'.*?(?P<w>[0-9]+)(?:\((?P<t>[0-9]+)\))?x(?P<h>[0-9]+).*', font_name)
         if not m:
             raise ValueError("can't infer font size from name (does not contain wxh)")
-        width, height = [int(item) for item in m.groups()]
+        width = int(m.groupdict().get('w'))
+        height = int(m.groupdict().get('h'))
+        thinwidth = int(m.groupdict().get('t') or width)
 
         replace = []
         for code, value in font_palette.items():
@@ -287,7 +292,7 @@ def initPixmap(background=None,
                 fontdef[i] = row.replace(code, newcode)
             font_palette[newcode] = font_palette[code]
             del font_palette[code]
-        return width, height, fontdef, font_palette
+        return width, height, thinwidth, fontdef, font_palette
 
     def calibrateFontPalette(font_palette, fg, bg):
         """computes modified font_palette
@@ -316,8 +321,8 @@ def initPixmap(background=None,
         
         return new_font_palette
         
-    global char_width, char_height
-    char_width, char_height, fontdef, font_palette = readFont(font_name)
+    global char_width, char_height, char_twidth
+    char_width, char_height, char_twidth, fontdef, font_palette = readFont(font_name)
     font_palette = calibrateFontPalette(font_palette, palette[fg], palette[bg])
     
     palette.update(font_palette)
