@@ -1,5 +1,5 @@
 /* XPM */
-static char *8x8-cholo[] = {
+static char *_8x8cholo_[] = {
 /* columns rows colors chars-per-pixel */
 "256 24 2 1",
 ". c gray100",
