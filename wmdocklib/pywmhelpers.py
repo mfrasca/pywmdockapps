@@ -178,9 +178,7 @@ def initPixmap(background=None,
 
     the remaining lower area defines the character set.  this is initialized
     using the corresponding named character set.  a file with this name must
-    be found somewhere in the path.  the colors used in the xpm file for
-    the charset must be ' ' and '%'.  they will be changed here to bg and
-    fg.
+    be found somewhere in the path.  
 
     palette is a dictionary
     1: of integers <- [0..15] to colors.
@@ -199,9 +197,9 @@ def initPixmap(background=None,
     # color.  per default we offer a 16 colors palette including what I
     # consider the basic colors:
     basic_colors = ['black', 'blue3', 'green3', 'cyan3',
-                     'red3', 'magenta3', 'yellow3', 'gray',
-                     'gray41', 'blue1', 'green1', 'cyan1',
-                     'red1', 'magenta1', 'yellow1', 'white']
+                    'red3', 'magenta3', 'yellow3', 'gray',
+                    'gray41', 'blue1', 'green1', 'cyan1',
+                    'red1', 'magenta1', 'yellow1', 'white']
 
     alter_palette, palette = palette, {}
     for name, index in zip(basic_colors, range(16)):
@@ -277,9 +275,9 @@ def initPixmap(background=None,
         width, height = [int(item) for item in m.groups()]
 
         replace = []
-        for code, value in [(code, value)
-                            for (code, value) in font_palette.items()
-                            if not available[code]]:
+        for code, value in font_palette.items():
+            if available[code]:
+                continue
             if palette[code] != font_palette[code]:
                 newcode = [k for k in available if available[k]][0]
                 available[newcode] = False
@@ -345,7 +343,7 @@ def initPixmap(background=None,
         item+' '*(xpmwidth-len(item))
         for item in background + patterns
         ] + [
-        line.replace('%', fg).replace(' ', bg) + ' '*(xpmwidth-len(line))
+        line + ' '*(xpmwidth-len(line))
         for line in fontdef
         ]
     if debug:
