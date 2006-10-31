@@ -279,7 +279,7 @@ def initPixmap(background=None,
             if available[code]:
                 continue
             if palette[code] != font_palette[code]:
-                newcode = [k for k in available if available[k]][0]
+                newcode = [k for k in available if available[k] and not k in font_palette][0]
                 available[newcode] = False
                 replace.append((code, newcode))
         for code, newcode in replace:
