@@ -416,11 +416,6 @@ def main():
     palette[8] = clConfig.get('barbgcolor', 'cyan4')
     palette[5] = clConfig.get('activitycolor', 'cyan2')
 
-    palette['.'] = 'grey85'
-    palette['x'] = 'black'
-    palette['o'] = 'grey45'
-    palette['-'] = 'grey65'
-
     font = clConfig.get('font', '6x8')
     debug = clConfig.get('debug')
 
