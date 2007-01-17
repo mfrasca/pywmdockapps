@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-"""pywmPhoto.py
+"""pywmphoto.py
 
 WindowMaker dockapp that displays a static xpm
 
@@ -13,7 +13,7 @@ Changes:
 2006-10-27 Mario Frasca
 First workingish version
 """
-usage = """pywmPhoto.py [options]
+usage = """pywmphoto.py [options]
 Available options are:
 -h, --help                      print this help
 -f, --file <file>               set the xpm name
