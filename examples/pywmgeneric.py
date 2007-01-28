@@ -666,7 +666,7 @@ def main():
     sys.argv[0] = programName
 
     global char_width, char_height
-    char_width, char_height = wmdocklib.initPixmap(patterns=background,
+    char_width, char_height = wmdocklib.initPixmap(#patterns=background,
                                                    font_name=font,
                                                    bg='_', fg='%',
                                                    palette=palette)
