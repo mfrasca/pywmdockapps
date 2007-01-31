@@ -27,7 +27,7 @@ YOFFSET = 4
 MARGIN = 1
 LINE_SPACING = 4
 
-usage = '''
+usage = '''\
 pywmwet.py [options]
 Available options are:
 -h, --help                          Print this help text
@@ -69,6 +69,7 @@ def query_server(server, port):
         query = '\xFF\xFF\xFF\xFF\x02getstatus\x0a\x00'
         addr = (server, port)
         sockobj = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sockobj.settimeout(4.0)
         sockobj.connect(addr)
         sockobj.send(query)
         data = sockobj.recv(4096)
