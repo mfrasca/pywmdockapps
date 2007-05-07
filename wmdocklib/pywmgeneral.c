@@ -191,24 +191,43 @@ pywmgeneral_checkForEvents(PyObject *self, PyObject *args) {
         return NULL;
     while (XPending(display)) {
         XNextEvent(display, &event);
-        if (event.type == Expose) {
-            RedrawWindow();
-        }
-        else if (event.type == ClientMessage) {
-            if((Atom)event.xclient.data.l[0] == deleteAtom) {
-                XCloseDisplay(display);
-                return Py_BuildValue("{s:s}", "type", "destroynotify");
-            }
-        }
-        else if (event.type == DestroyNotify) {
-            /* This seems to never happen, why? */
+        switch(event.type) {
+
+        case Expose:
+          RedrawWindow();
+          break;
+
+        case EnterNotify: 
+        case LeaveNotify:
+          /* needed by KeyPress/release, otherwise events go to parent. */
+          XSetInputFocus(display, PointerRoot, RevertToParent, CurrentTime);
+          break; 
+
+        case KeyPress:
+          return Py_BuildValue("{s:s,s:i,s:i}", 
+                               "type", "keypress",
+                               "state", event.xkey.state, 
+                               "keycode", event.xkey.keycode);
+
+        case ButtonPress:
+        case ButtonRelease:
+          return Py_BuildValue("{s:s,s:i,s:i,s:i}", 
+                               "type", event.type==ButtonPress?"buttonpress":"buttonrelease",
+                               "button", event.xbutton.button, 
+                               "x", event.xbutton.x, "y", event.xbutton.y);
+
+        case ClientMessage:
+          if((Atom)event.xclient.data.l[0] == deleteAtom) {
             XCloseDisplay(display);
             return Py_BuildValue("{s:s}", "type", "destroynotify");
-        }
-        else if (event.type == ButtonRelease) {
-            return Py_BuildValue("{s:s,s:i,s:i,s:i}", "type", "buttonrelease",
-                                "button", event.xbutton.button, "x", 
-                                event.xbutton.x, "y", event.xbutton.y);
+          }
+          break;
+
+        case DestroyNotify:
+          /* This seems to never happen, why? */
+          XCloseDisplay(display);
+          return Py_BuildValue("{s:s}", "type", "destroynotify");
+
         }
     }
     Py_INCREF(Py_None);
@@ -551,8 +570,30 @@ void openXwindow(int argc, char *argv[], char *pixmap_bytes[], char *pixmask_bit
     classHint.res_class = wname;
     XSetClassHint(display, win, &classHint);
 
-    XSelectInput(display, win, ButtonPressMask | ExposureMask | ButtonReleaseMask | PointerMotionMask | StructureNotifyMask);
-    XSelectInput(display, iconwin, ButtonPressMask | ExposureMask | ButtonReleaseMask | PointerMotionMask | StructureNotifyMask);
+    XSelectInput(display, win,
+                 ExposureMask | 
+                 ButtonPressMask | 
+                 ButtonReleaseMask |	/* added ButtonReleaseMask *charkins*/
+                 KeyPressMask |           /* Try this to get keyboard working */
+                 PointerMotionMask |
+                 FocusChangeMask |
+                 LeaveWindowMask |
+                 StructureNotifyMask |
+                 EnterWindowMask );
+    XSelectInput(display, iconwin, 
+                 ExposureMask | 
+                 ButtonPressMask | 
+                 ButtonReleaseMask |	/* added ButtonReleaseMask *charkins*/
+                 KeyPressMask |           /* Try this to get keyboard working */
+                 PointerMotionMask |
+                 FocusChangeMask |
+                 LeaveWindowMask |
+                 StructureNotifyMask |
+                 EnterWindowMask );
+                 //ButtonPressMask | ButtonReleaseMask | KeyPressMask | KeyReleaseMask | 
+                 //ExposureMask | 
+                 //FocusChangeMask | EnterWindowMask |
+                 //PointerMotionMask | StructureNotifyMask);
 
     if (XStringListToTextProperty(&wname, 1, &name) == 0) {
         fprintf(stderr, "%s: can't allocate window name\n", wname);
