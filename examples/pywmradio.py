@@ -54,7 +54,9 @@ class Application(wmoo.Application):
                                       stdin =devnull,
                                       stdout=subprocess.PIPE,
                                       stderr=devnull)
+        self._buffered = ''
         self._buffering = 1
+        self._cacheLevel = 0
         import fcntl
 	flags = fcntl.fcntl(self.child.stdout, fcntl.F_GETFL)
     	fcntl.fcntl(self.child.stdout, fcntl.F_SETFL, flags | os.O_NONBLOCK)
@@ -89,12 +91,10 @@ class Application(wmoo.Application):
             self.startPlayer()
 
     def playStream(self, event):
-        self._cacheLevel = 0
         self.startPlayer()
 
     def stopStream(self, event):
         self.stopPlayer()
-        self.putPattern(9, 0, 9, 11, 38, 43)
         self._cacheLevel = -50
         self.showCacheLevel()
 
@@ -185,7 +185,7 @@ background = [
     "                                                                ",
     "                                                                ",
     "                                                                ",
-    "      XXXXXXXX.   XXXXXXXX.   XXXXXXXX.             ---         ",#100
+    "      XXXXXXXX.   XXXXXXXX.   XXXXXXXX.          .. --- ..      ",#100
     "      X--------   X--------   X--------             ---         ",#96
     "      X--------   X--------   X--------             ---         ",#92
     "      X--o--o--   X--o--o--   X-o.-.o--             ---         ",#88
@@ -198,7 +198,7 @@ background = [
     "      .--------   .--------   .--------             ---         ",#60
     "                                                    ---         ",#56
     "                                                    ---         ",#52
-    "                                                    ---         ",#48
+    "                                                 .. --- ..      ",#48
     "      XXXXXXXX.   XXXXXXXX.   XXXXXXXX.             ---         ",#44
     "      X--------   X--------   X--------             ---         ",#40
     "      X--------   X--------   X--------             ---         ",#36
@@ -211,8 +211,8 @@ background = [
     "      X--------   X--------   X--------             ---         ",#08
     "      .--------   .--------   .--------             ---         ",#04
     "                                                    ---         ",#00
-    "                                                    ---         ",
-    "                                                    ---         ",
+    "                                                 .. --- ..      ",
+    "                                                                ",
     "                                                                ",
     "                                                                ",
     "                                                                ",
