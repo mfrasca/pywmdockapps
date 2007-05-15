@@ -22,6 +22,12 @@ class Application(wmoo.Application):
         self.radioList = []
         self.currentRadio = 0
         self._blink = 0
+        self._cacheLevel = -50
+        self._buffering = 0
+
+        self._buffered = ''
+        import re
+        self._feedback = re.compile(r'A:[0-9\.]+ \([0-9:\.]+\) .+ .+ .+ .+ (.+)%')
 
         import fileinput, os
         configfile = os.sep.join([os.environ['HOME'], '.pyradiorc'])
@@ -45,8 +51,13 @@ class Application(wmoo.Application):
                        self.radioList[self.currentRadio][1]
                        ]
         self.child = subprocess.Popen(commandline,
-                                      stdout=devnull,
+                                      stdin =devnull,
+                                      stdout=subprocess.PIPE,
                                       stderr=devnull)
+        self._buffering = 1
+        import fcntl
+	flags = fcntl.fcntl(self.child.stdout, fcntl.F_GETFL)
+    	fcntl.fcntl(self.child.stdout, fcntl.F_SETFL, flags | os.O_NONBLOCK)
 
     def stopPlayer(self):
         if self.child:
@@ -78,24 +89,62 @@ class Application(wmoo.Application):
             self.startPlayer()
 
     def playStream(self, event):
+        self._cacheLevel = 0
         self.startPlayer()
 
     def stopStream(self, event):
         self.stopPlayer()
         self.putPattern(9, 0, 9, 11, 38, 43)
+        self._cacheLevel = -50
+        self.showCacheLevel()
 
     def blink(self):
         self._blink += 1
         if self._blink == 10:
-            self.putPattern(0, 0, 9, 11, 38, 43)
+            self.putPattern(0, 0, 9, 11, 30, 43)
         elif self._blink == 20:
             self._blink = 0
-            self.putPattern(9, 0, 9, 11, 38, 43)
-        pass
+            self.putPattern(9, 0, 9, 11, 30, 43)
+
+    def showCacheLevel(self):
+        if self._buffering:
+            self._cacheLevel += 1
+            if self._cacheLevel == 25:
+                self._cacheLevel = 0
+            for i in range(0, 25):
+                if i == self._cacheLevel:
+                    self.putPattern(54, self._buffering, 3, 1, 52, 54-i)
+                else:
+                    self.putPattern(54, 0, 3, 1, 52, 54-i)
+        else:
+            for i in range(-1, 25):
+                if i*4 < self._cacheLevel:
+                    self.putPattern(54, 2, 3, 1, 52, 54-i)
+                else:
+                    self.putPattern(54, 0, 3, 1, 52, 54-i)
 
     def update(self):
         if self.child:
-            self.blink()
+            import select
+            [i, o, e] = select.select([self.child.stdout], [], [], 0)
+            if i: line = self.child.stdout.read(10240)
+            else: line = ''
+
+            self._buffered += line
+            npos = self._buffered.find('\n')+1
+            rpos = self._buffered.find('\r')+1
+            if npos != 0:
+                self._buffered = self._buffered[npos:]
+            if rpos != 0:
+                if self._buffered.startswith('Cache fill:'):
+                    self._buffering = 2
+                match = self._feedback.match(self._buffered)
+                if match:
+                    self._buffering = 0
+                    self._cacheLevel = float(match.group(1))
+
+                self._buffered = self._buffered[rpos:]
+            self.showCacheLevel()
 
 palette = {
     '-': "#000000",
@@ -103,6 +152,7 @@ palette = {
     "X": "#AEAEAA",
     "o": "#F7F7F3",
     "r": "#F70000",
+    "i": "#00F700",
     }
 
 background = [
@@ -135,34 +185,34 @@ background = [
     "                                                                ",
     "                                                                ",
     "                                                                ",
-    "              XXXXXXXX.   XXXXXXXX.   XXXXXXXX.                 ",
-    "              X--------   X--------   X--------                 ",
-    "              X--------   X--------   X--------                 ",
-    "              X--o--o--   X--o--o--   X-o.-.o--                 ",
-    "              X--o-oo--   X--oo-o--   X-.o.o.--                 ",
-    "              X--oooo--   X--oooo--   X--.o. --                 ",
-    "              X--o-oo--   X--oo-o--   X-.o.o.--                 ",
-    "              X--o--o--   X--o--o--   X-o.-.o--                 ",
-    "              X--------   X--------   X--------                 ",
-    "              X--------   X--------   X--------                 ",
-    "              .--------   .--------   .--------                 ",
-    "                                                                ",
-    "                                                                ",
-    "                                                                ",
-    "              XXXXXXXX.   XXXXXXXX.   XXXXXXXX.                 ",
-    "              X--------   X--------   X--------                 ",
-    "              X--------   X--------   X--------                 ",
-    "              X--o-----   X-oo-oo--   X-ooooo--                 ",
-    "              X--oo----   X-oo-oo--   X-ooooo--                 ",
-    "              X--ooo---   X-oo-oo--   X-ooooo--                 ",
-    "              X--oo----   X-oo-oo--   X-ooooo--                 ",
-    "              X--o-----   X-oo-oo--   X-ooooo--                 ",
-    "              X--------   X--------   X--------                 ",
-    "              X--------   X--------   X--------                 ",
-    "              .--------   .--------   .--------                 ",
-    "                                                                ",
-    "                                                                ",
-    "                                                                ",
+    "      XXXXXXXX.   XXXXXXXX.   XXXXXXXX.             ---         ",#100
+    "      X--------   X--------   X--------             ---         ",#96
+    "      X--------   X--------   X--------             ---         ",#92
+    "      X--o--o--   X--o--o--   X-o.-.o--             ---         ",#88
+    "      X--o-oo--   X--oo-o--   X-.o.o.--             ---         ",#84
+    "      X--oooo--   X--oooo--   X--.o. --             ---         ",#80
+    "      X--o-oo--   X--oo-o--   X-.o.o.--             ---         ",#76
+    "      X--o--o--   X--o--o--   X-o.-.o--             ---         ",#72
+    "      X--------   X--------   X--------             ---         ",#68
+    "      X--------   X--------   X--------             ---         ",#64
+    "      .--------   .--------   .--------             ---         ",#60
+    "                                                    ---         ",#56
+    "                                                    ---         ",#52
+    "                                                    ---         ",#48
+    "      XXXXXXXX.   XXXXXXXX.   XXXXXXXX.             ---         ",#44
+    "      X--------   X--------   X--------             ---         ",#40
+    "      X--------   X--------   X--------             ---         ",#36
+    "      X--o-----   X-oo-oo--   X-ooooo--             ---         ",#32
+    "      X--oo----   X-oo-oo--   X-ooooo--             ---         ",#28
+    "      X--ooo---   X-oo-oo--   X-ooooo--             ---         ",#24
+    "      X--oo----   X-oo-oo--   X-ooooo--             ---         ",#20
+    "      X--o-----   X-oo-oo--   X-ooooo--             ---         ",#16
+    "      X--------   X--------   X--------             ---         ",#12
+    "      X--------   X--------   X--------             ---         ",#08
+    "      .--------   .--------   .--------             ---         ",#04
+    "                                                    ---         ",#00
+    "                                                    ---         ",
+    "                                                    ---         ",
     "                                                                ",
     "                                                                ",
     "                                                                ",
@@ -173,9 +223,9 @@ background = [
     ]
 
 patterns = [
-    "XXXXXXXX.XXXXXXXX.XXXXXXXX.XXXXXXXX.XXXXXXXX.XXXXXXXX.          ",
-    "X--------X--------X--------X--------X--------X--------          ",
-    "X--------X--------X--------X--------X--------X--------          ",
+    "XXXXXXXX.XXXXXXXX.XXXXXXXX.XXXXXXXX.XXXXXXXX.XXXXXXXX.---       ",
+    "X--------X--------X--------X--------X--------X--------rrr       ",
+    "X--------X--------X--------X--------X--------X--------iii       ",
     "X-rrrrr--X-ooooo--X-rr-rr--X-oo-oo--X--o-----X--r-----          ",
     "X-rrrrr--X-ooooo--X-rr-rr--X-oo-oo--X--oo----X--rr----          ",
     "X-rrrrr--X-ooooo--X-rr-rr--X-oo-oo--X--ooo---X--rrr---          ",
@@ -200,13 +250,13 @@ def main():
 
     # app.addCallback(printevent)
  
-    app.addCallback(app.previousRadio, 'buttonrelease', area=(14,29,23,38))
-    app.addCallback(app.nextRadio,     'buttonrelease', area=(26,29,35,38))
-    app.addCallback(app.quitProgram,   'buttonrelease', area=(38,29,47,38), key=1)
+    app.addCallback(app.previousRadio, 'buttonrelease', area=( 6,29,15,38))
+    app.addCallback(app.nextRadio,     'buttonrelease', area=(18,29,27,38))
+    app.addCallback(app.quitProgram,   'buttonrelease', area=(30,29,39,38), key=1)
 
-    app.addCallback(app.playStream, 'buttonrelease', area=(14,43,23,52))
-    app.addCallback(app.stopStream, 'buttonrelease', area=(26,43,35,52))
-    app.addCallback(app.stopStream, 'buttonrelease', area=(38,43,47,52))
+    app.addCallback(app.playStream, 'buttonrelease', area=( 6,43,15,52))
+    app.addCallback(app.stopStream, 'buttonrelease', area=(18,43,27,52))
+    app.addCallback(app.stopStream, 'buttonrelease', area=(30,43,39,52))
     
     app.run()
 
