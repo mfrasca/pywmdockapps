@@ -16,10 +16,27 @@ class Application:
         """
         self._events = []
         self._sleep = 0.1
+        self._offset_x = self._offset_y = 3
 
-        pywmhelpers.initPixmap(*args, **kwargs)
+        self._char_width, self._char_height = pywmhelpers.initPixmap(*args, **kwargs)
         pywmhelpers.openXwindow(sys.argv, 64, 64)
         pass
+
+    def putString(self, x, y, string):
+        pywmhelpers.addString(string, x, y,
+                              self._offset_x, self._offset_y,
+                              self._char_width, self._char_height)
+
+    def putPattern(self, sourceX, sourceY, width, height, targetX, targetY):
+        pywmhelpers.copyXPMArea(sourceX, sourceY+64, width, height,
+                                targetX, targetY)
+
+    def update(self):
+        pass
+
+    def redraw(self):
+        self.update()
+        pywmhelpers.redraw()
 
     def addHandler(self):
         """adds a signal handler.
@@ -67,7 +84,7 @@ class Application:
                     callback(event)
                     
                 event = pywmhelpers.getEvent()
-            pywmhelpers.redraw()
+            self.redraw()
             time.sleep(self._sleep)
             
     pass
