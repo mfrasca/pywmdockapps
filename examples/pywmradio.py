@@ -21,13 +21,13 @@ class Application(wmoo.Application):
         self.cache = '64'
         self.radioList = []
         self.currentRadio = 0
-        self._blink = 0
+        self._count = 0
         self._cacheLevel = -50
         self._buffering = 0
 
         self._buffered = ''
         import re
-        self._feedback = re.compile(r'A:[0-9\.]+ \([0-9:\.]+\) .+ .+ .+ .+ (.+)%')
+        self._feedback = re.compile(r'.+ \(.+?\) .+? .+? .+? .+? ([0-9\.]+)%')
 
         import fileinput, os
         configfile = os.sep.join([os.environ['HOME'], '.pyradiorc'])
@@ -98,20 +98,12 @@ class Application(wmoo.Application):
         self._cacheLevel = -50
         self.showCacheLevel()
 
-    def blink(self):
-        self._blink += 1
-        if self._blink == 10:
-            self.putPattern(0, 0, 9, 11, 30, 43)
-        elif self._blink == 20:
-            self._blink = 0
-            self.putPattern(9, 0, 9, 11, 30, 43)
-
     def showCacheLevel(self):
         if self._buffering:
-            self._cacheLevel += 1
-            if self._cacheLevel == 25:
-                self._cacheLevel = 0
-            for i in range(0, 25):
+            self._cacheLevel += 2
+            if self._cacheLevel >= 25:
+                self._cacheLevel -= 25
+            for i in range(-1, 25):
                 if i == self._cacheLevel:
                     self.putPattern(54, self._buffering, 3, 1, 52, 54-i)
                 else:
@@ -127,23 +119,22 @@ class Application(wmoo.Application):
         if self.child:
             import select
             [i, o, e] = select.select([self.child.stdout], [], [], 0)
-            if i: line = self.child.stdout.read(10240)
-            else: line = ''
+            if i:
+                line = self.child.stdout.read(102400)
+                self._buffered += line
+                npos = self._buffered.rfind('\n')+1
+                rpos = self._buffered.rfind('\r')+1
+                if npos != 0:
+                    self._buffered = self._buffered[npos:]
+                if rpos != 0:
+                    if self._buffered.startswith('Cache fill:'):
+                        self._buffering = 2
+                    match = self._feedback.match(self._buffered[rpos-90:rpos])
+                    if match:
+                        self._buffering = 0
+                        self._cacheLevel = float(match.group(1))
 
-            self._buffered += line
-            npos = self._buffered.find('\n')+1
-            rpos = self._buffered.find('\r')+1
-            if npos != 0:
-                self._buffered = self._buffered[npos:]
-            if rpos != 0:
-                if self._buffered.startswith('Cache fill:'):
-                    self._buffering = 2
-                match = self._feedback.match(self._buffered)
-                if match:
-                    self._buffering = 0
-                    self._cacheLevel = float(match.group(1))
-
-                self._buffered = self._buffered[rpos:]
+                    self._buffered = self._buffered[rpos:]
             self.showCacheLevel()
 
 palette = {
