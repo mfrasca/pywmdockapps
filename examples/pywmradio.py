@@ -133,10 +133,11 @@ class Application(wmoo.Application):
                 if rpos != 0:
                     if self._buffered.startswith('Cache fill:'):
                         self._buffering = 2
-                    match = self._feedback.match(self._buffered[rpos-90:rpos])
-                    if match:
-                        self._buffering = 0
-                        self._cacheLevel = float(match.group(1))
+                    else:
+                        match = self._feedback.match(self._buffered[rpos-90:rpos])
+                        if match:
+                            self._buffering = 0
+                            self._cacheLevel = float(match.group(1))
 
                     self._buffered = self._buffered[rpos:]
             self.showCacheLevel()
@@ -146,7 +147,7 @@ palette = {
     ".": "#868682",
     "X": "#AEAEAA",
     "o": "#F7F7F3",
-    "r": "#F70000",
+    "r": "#F7A0A0",
     "i": "#00F700",
     }
 
