@@ -18,7 +18,7 @@ class Application(wmoo.Application):
     def __init__(self, *args, **kwargs):
         wmoo.Application.__init__(self, *args, **kwargs)
         self.child = None
-        self.cache = '64'
+        self.cache = '320'
         self.radioList = []
         self.currentRadio = 0
         self._count = 0
@@ -116,6 +116,10 @@ class Application(wmoo.Application):
                     self.putPattern(54, 0, 3, 1, 52, 54-i)
 
     def update(self):
+        self._count += 1
+        if self._count <= 3:
+            return
+        self._count = 0
         if self.child:
             import select
             [i, o, e] = select.select([self.child.stdout], [], [], 0)
