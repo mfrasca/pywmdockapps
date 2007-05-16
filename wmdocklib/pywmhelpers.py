@@ -92,7 +92,9 @@ def addChar(ch, x, y, xOffset, yOffset, width, height):
     """
 
     if not (32 <= ord(ch) <= 127):
-        raise ValueError, "Unsupported Char: '%s'(%d)" % (ch, ord(ch))
+        pass
+        #raise ValueError, "Unsupported Char: '%s'(%d)" % (ch, ord(ch))
+    
     # linelength is the amount of bits the character set uses on each row.
     linelength = charset_width - (charset_width % char_width)
     # pos is the horizontal index of the box containing ch.
@@ -380,8 +382,11 @@ def copyXPMArea(sourceX, sourceY, width, height, targetX, targetY):
         pywmgeneral.copyXPMArea(sourceX, sourceY, width, height,
                                 targetX, targetY)
 
-def addMouseRegion(index, left, top, right, bottom):
+def addMouseRegion(index, left, top, right=None, bottom=None, width=None, height=None):
     """Add a mouse region in the window."""
+    if right is bottom is None:
+        right = left + width
+        bottom = top + height
     pywmgeneral.addMouseRegion(index, left, top, right, bottom)
 
 def checkMouseRegion(x, y):
