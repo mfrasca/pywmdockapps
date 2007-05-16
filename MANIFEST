@@ -1,12 +1,17 @@
 README.txt
 setup.py
 examples/README
-examples/pywmPhoto.py
 examples/pywmdatetime.py
 examples/pywmgeneric.py
 examples/pywmhdmon.py
+examples/pywmnop.py
+examples/pywmoonop.py
+examples/pywmphoto.py
+examples/pywmradio.py
 examples/pywmseti.py
 examples/pywmsysmon.py
+examples/pywmwet.py
+examples/sample.pyradiorc
 examples/sample.pywmdatetimerc
 examples/sample.pywmgenericrc
 examples/sample.pywmhdmonrc
@@ -35,3 +40,4 @@ wmdocklib/__init__.py
 wmdocklib/pywmgeneral.c
 wmdocklib/pywmgeneral.h
 wmdocklib/pywmhelpers.py
+wmdocklib/wmoo.py
