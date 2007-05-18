@@ -47,8 +47,18 @@ class Application(wmoo.Application):
             else:
                 self.radioList.append( (radioname+' '*24, radiodef[1], radiodef[2]) )
 
+    def reset(self):
+        self._cacheLevel = -50
+        self.child = None
+        self._paused = None
+        self.showCacheLevel()
+        
+
+    def handler(self, num, frame):
+        self.reset()
+
     def startPlayer(self):
-        import os, subprocess
+        import os, subprocess, signal
         commandline = [mplayer,
                        '-cache', self.radioList[self.currentRadio][2],
                        self.radioList[self.currentRadio][1]
@@ -57,6 +67,7 @@ class Application(wmoo.Application):
                                       stdin =subprocess.PIPE,
                                       stdout=subprocess.PIPE,
                                       stderr=devnull)
+        signal.signal(signal.SIGCHLD, self.handler)
         self._paused = False
         self._buffered = ''
         self._buffering = 1
@@ -71,8 +82,6 @@ class Application(wmoo.Application):
                 self.child.stdin.write('q')
             import os, signal
             os.kill(self.child.pid, signal.SIGKILL)
-            self.child = None
-            self._paused = None
             return True
         return False
 
@@ -102,8 +111,7 @@ class Application(wmoo.Application):
 
     def stopStream(self, event):
         self.stopPlayer()
-        self._cacheLevel = -50
-        self.showCacheLevel()
+        self.reset()
 
     def pauseStream(self, event):
         if self.child:
@@ -161,6 +169,10 @@ class Application(wmoo.Application):
 
                     self._buffered = self._buffered[rpos:]
             self.showCacheLevel()
+
+def handler(num, frame):
+    hdmon.updateMonitoredPaths()
+    signal.alarm(10)
 
 palette = {
     '-': "#000000",
