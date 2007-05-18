@@ -18,6 +18,7 @@ class Application(wmoo.Application):
     def __init__(self, *args, **kwargs):
         wmoo.Application.__init__(self, *args, **kwargs)
         self.child = None
+        self._paused = None
         self.radioList = []
         self.currentRadio = 0
         self._count = 0
@@ -56,6 +57,7 @@ class Application(wmoo.Application):
                                       stdin =subprocess.PIPE,
                                       stdout=subprocess.PIPE,
                                       stderr=devnull)
+        self._paused = False
         self._buffered = ''
         self._buffering = 1
         self._cacheLevel = 0
@@ -70,6 +72,7 @@ class Application(wmoo.Application):
             import os, signal
             os.kill(self.child.pid, signal.SIGKILL)
             self.child = None
+            self._paused = None
             return True
         return False
 
@@ -105,6 +108,9 @@ class Application(wmoo.Application):
     def pauseStream(self, event):
         if self.child:
             self.child.stdin.write(' ')
+            self._paused = not self._paused
+            if self._paused:
+                self._colour = 1
             return True
         return False
 
@@ -119,9 +125,13 @@ class Application(wmoo.Application):
                 else:
                     self.putPattern(54, 0, 3, 1, 52, 54-i)
         else:
+            if self._paused:
+                colour = self._colour = 3 - self._colour
+            else:
+                colour = 2
             for i in range(-1, 25):
                 if i*4 < self._cacheLevel:
-                    self.putPattern(54, 2, 3, 1, 52, 54-i)
+                    self.putPattern(54, colour, 3, 1, 52, 54-i)
                 else:
                     self.putPattern(54, 0, 3, 1, 52, 54-i)
 
