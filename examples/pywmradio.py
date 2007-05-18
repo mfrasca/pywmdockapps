@@ -18,7 +18,6 @@ class Application(wmoo.Application):
     def __init__(self, *args, **kwargs):
         wmoo.Application.__init__(self, *args, **kwargs)
         self.child = None
-        self.cache = '320'
         self.radioList = []
         self.currentRadio = 0
         self._count = 0
@@ -27,13 +26,16 @@ class Application(wmoo.Application):
 
         self._buffered = ''
         import re
-        self._feedback = re.compile(r'.+ \(.+?\) .+? .+? .+? .+? ([0-9\.]+)%')
+        self._feedback = re.compile(r'.+A:.*?% ([0-9\.]+)%')
 
         import fileinput, os
         configfile = os.sep.join([os.environ['HOME'], '.pyradiorc'])
 
-        for i in fileinput.input(configfile):
-            i = i.split('\n')[0]
+        import codecs
+        f = codecs.open(configfile, 'r', 'utf-8')
+        t = f.read()
+        f.close()
+        for i in t.split(u'\n'):
             radiodef = i.split('\t')
             radioname = radiodef[0].lower()
             if len(radiodef) == 1:
@@ -42,16 +44,16 @@ class Application(wmoo.Application):
                 globals()[radiodef[1]] = radiodef[2]
                 pass
             else:
-                self.radioList.append( (radioname+' '*24, radiodef[1]) )
+                self.radioList.append( (radioname+' '*24, radiodef[1], radiodef[2]) )
 
     def startPlayer(self):
         import os, subprocess
         commandline = [mplayer,
-                       '-cache', self.cache,
+                       '-cache', self.radioList[self.currentRadio][2],
                        self.radioList[self.currentRadio][1]
                        ]
         self.child = subprocess.Popen(commandline,
-                                      stdin =devnull,
+                                      stdin =subprocess.PIPE,
                                       stdout=subprocess.PIPE,
                                       stderr=devnull)
         self._buffered = ''
@@ -63,7 +65,9 @@ class Application(wmoo.Application):
 
     def stopPlayer(self):
         if self.child:
-            import os, subprocess, signal
+            if self._buffering != 1:
+                self.child.stdin.write('q')
+            import os, signal
             os.kill(self.child.pid, signal.SIGKILL)
             self.child = None
             return True
@@ -98,13 +102,19 @@ class Application(wmoo.Application):
         self._cacheLevel = -50
         self.showCacheLevel()
 
+    def pauseStream(self, event):
+        if self.child:
+            self.child.stdin.write(' ')
+            return True
+        return False
+
     def showCacheLevel(self):
         if self._buffering:
-            self._cacheLevel += 2
+            self._cacheLevel += 1
             if self._cacheLevel >= 25:
                 self._cacheLevel -= 25
             for i in range(-1, 25):
-                if i == self._cacheLevel:
+                if abs(i - self._cacheLevel) <= 1:
                     self.putPattern(54, self._buffering, 3, 1, 52, 54-i)
                 else:
                     self.putPattern(54, 0, 3, 1, 52, 54-i)
@@ -147,7 +157,7 @@ palette = {
     ".": "#868682",
     "X": "#AEAEAA",
     "o": "#F7F7F3",
-    "r": "#F7A0A0",
+    "r": "#F73020",
     "i": "#00F700",
     }
 
@@ -180,34 +190,34 @@ background = [
     "                                                                ",
     "                                                                ",
     "                                                                ",
-    "                                                                ",
-    "      XXXXXXXX.   XXXXXXXX.   XXXXXXXX.          .. --- ..      ",#100
-    "      X--------   X--------   X--------             ---         ",#96
-    "      X--------   X--------   X--------             ---         ",#92
-    "      X--o--o--   X--o--o--   X-o.-.o--             ---         ",#88
-    "      X--o-oo--   X--oo-o--   X-.o.o.--             ---         ",#84
-    "      X--oooo--   X--oooo--   X--.o. --             ---         ",#80
-    "      X--o-oo--   X--oo-o--   X-.o.o.--             ---         ",#76
-    "      X--o--o--   X--o--o--   X-o.-.o--             ---         ",#72
-    "      X--------   X--------   X--------             ---         ",#68
-    "      X--------   X--------   X--------             ---         ",#64
-    "      .--------   .--------   .--------             ---         ",#60
-    "                                                    ---         ",#56
-    "                                                    ---         ",#52
-    "                                                 .. --- ..      ",#48
-    "      XXXXXXXX.   XXXXXXXX.   XXXXXXXX.             ---         ",#44
-    "      X--------   X--------   X--------             ---         ",#40
-    "      X--------   X--------   X--------             ---         ",#36
-    "      X--o-----   X-oo-oo--   X-ooooo--             ---         ",#32
-    "      X--oo----   X-oo-oo--   X-ooooo--             ---         ",#28
-    "      X--ooo---   X-oo-oo--   X-ooooo--             ---         ",#24
-    "      X--oo----   X-oo-oo--   X-ooooo--             ---         ",#20
-    "      X--o-----   X-oo-oo--   X-ooooo--             ---         ",#16
-    "      X--------   X--------   X--------             ---         ",#12
-    "      X--------   X--------   X--------             ---         ",#08
-    "      .--------   .--------   .--------             ---         ",#04
-    "                                                    ---         ",#00
-    "                                                 .. --- ..      ",
+    "                                                   XXXX.        ",
+    "      XXXXXXXX.   XXXXXXXX.   XXXXXXXX.            X---         ",
+    "      X--------   X--------   X--------            X---         ",
+    "      X--------   X--------   X--------            X---         ",
+    "      X--o--o--   X--o--o--   X-o.-.o--            X---         ",
+    "      X--o-oo--   X--oo-o--   X-.o.o.--            X---         ",
+    "      X--oooo--   X--oooo--   X--.o. --            X---         ",
+    "      X--o-oo--   X--oo-o--   X-.o.o.--            X---         ",
+    "      X--o--o--   X--o--o--   X-o.-.o--            X---         ",
+    "      X--------   X--------   X--------            X---         ",
+    "      X--------   X--------   X--------            X---         ",
+    "      .--------   .--------   .--------            X---         ",
+    "                                                   X---         ",
+    "                                                   X---         ",
+    "                                                  X.---..       ",
+    "      XXXXXXXX.   XXXXXXXX.   XXXXXXXX.            X---         ",
+    "      X--------   X--------   X--------            X---         ",
+    "      X--------   X--------   X--------            X---         ",
+    "      X--o-----   X-oo-oo--   X-ooooo--            X---         ",
+    "      X--oo----   X-oo-oo--   X-ooooo--            X---         ",
+    "      X--ooo---   X-oo-oo--   X-ooooo--            X---         ",
+    "      X--oo----   X-oo-oo--   X-ooooo--            X---         ",
+    "      X--o-----   X-oo-oo--   X-ooooo--            X---         ",
+    "      X--------   X--------   X--------            X---         ",
+    "      X--------   X--------   X--------            X---         ",
+    "      .--------   .--------   .--------            X---         ",
+    "                                                   X---         ",
+    "                                                   .---         ",
     "                                                                ",
     "                                                                ",
     "                                                                ",
@@ -251,7 +261,7 @@ def main():
     app.addCallback(app.quitProgram,   'buttonrelease', area=(30,29,39,38), key=1)
 
     app.addCallback(app.playStream, 'buttonrelease', area=( 6,43,15,52))
-    app.addCallback(app.stopStream, 'buttonrelease', area=(18,43,27,52))
+    app.addCallback(app.pauseStream, 'buttonrelease', area=(18,43,27,52))
     app.addCallback(app.stopStream, 'buttonrelease', area=(30,43,39,52))
     
     app.run()
