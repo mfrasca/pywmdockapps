@@ -207,6 +207,11 @@ def initPixmap(background=None,
                     'gray41', 'blue1', 'green1', 'cyan1',
                     'red1', 'magenta1', 'yellow1', 'white']
 
+    if isinstance(patterns, str):
+        palette, patterns = readXPM(patterns)
+    if isinstance(background, str):
+        palette, background = readXPM(background)
+
     alter_palette, palette = palette, {}
     for name, index in zip(basic_colors, range(16)):
         palette['%x'%index] = getColorCode(name)
