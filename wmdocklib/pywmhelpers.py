@@ -92,8 +92,9 @@ def addChar(ch, x, y, xOffset, yOffset, width, height):
     """
 
     if not (32 <= ord(ch) <= 127):
-        pass
+        #print ord(ch)
         #raise ValueError, "Unsupported Char: '%s'(%d)" % (ch, ord(ch))
+        pass
     
     # linelength is the amount of bits the character set uses on each row.
     linelength = charset_width - (charset_width % char_width)
