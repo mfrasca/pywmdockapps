@@ -53,7 +53,7 @@ class Application(wmoo.Application):
                 globals()[radiodef[1]] = radiodef[2]
                 pass
             else:
-                self.radioList.append( (radioname+' '*24, radiodef[1], radiodef[2]) )
+                self.radioList.append( (radioname, radiodef[1], radiodef[2]) )
         
 
     def handler(self, num, frame):
@@ -106,7 +106,7 @@ class Application(wmoo.Application):
     def previousRadio(self, event):
         if self.currentRadio == 0: self.currentRadio = len(self.radioList)
         self.currentRadio -= 1
-        self.putString(0, 10, self.radioList[self.currentRadio][0])
+        self.setLabelText('name', self.radioList[self.currentRadio][0])
         if self.child:
             self.stopPlayer()
             self.startPlayer()
@@ -114,7 +114,7 @@ class Application(wmoo.Application):
     def nextRadio(self, event):
         self.currentRadio += 1
         if self.currentRadio == len(self.radioList): self.currentRadio = 0
-        self.putString(0, 10, self.radioList[self.currentRadio][0])
+        self.setLabelText('name', self.radioList[self.currentRadio][0])
         if self.child:
             self.stopPlayer()
             self.startPlayer()
@@ -158,6 +158,7 @@ class Application(wmoo.Application):
                     self.putPattern(54, 0, 3, 1, 52, 54-i)
 
     def update(self):
+        wmoo.Application.update(self)
         self._count += 1
         if self._count <= 3:
             return
@@ -285,7 +286,7 @@ def main():
                       background = background,
                       patterns = patterns)
     # maxCharsPerLine = (width-2*xOffset) / char width
-    app.putString(0, 10, app.radioList[app.currentRadio][0])
+    app.addLabel('name', (3, 13), (58, 10), app.radioList[app.currentRadio][0])
 
     # app.addCallback(printevent)
  

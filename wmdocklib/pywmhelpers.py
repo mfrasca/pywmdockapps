@@ -77,7 +77,7 @@ def getCenterStartPos(s, areaWidth, offset):
     textArea = areaWidth - offset * 2 - 1
     return (textArea - w) / 2
 
-def addChar(ch, x, y, xOffset, yOffset, width, height):
+def addChar(ch, x, y, xOffset, yOffset, width, height, drawable=None):
     """Paint the character ch at position x, y in the window.
 
     Return the (width, height) of the character painted.  (will be useful if
@@ -109,17 +109,21 @@ def addChar(ch, x, y, xOffset, yOffset, width, height):
     chW = char_width
     if ch in "',.:;":
         chW = char_twidth
-    pywmgeneral.copyXPMArea(chX, chY, chW, char_height, targX, targY)
+    if drawable is None:
+        pywmgeneral.copyXPMArea(chX, chY, chW, char_height, targX, targY)
+    else:
+        drawable.xCopyAreaFromWindow(chX, chY, chW, char_height, targX, targY)
     return (chW, char_height)
 
-def addString(s, x, y, xOffset, yOffset, width, height):
+def addString(s, x, y, xOffset=0, yOffset=0, width=None, height=None, drawable=None):
     """Add a string at the given x and y positions.
     
     Call addChar repeatedely, so the same exception rules apply."""
     lastW = 0
     for letter in s:
         w, h = addChar(letter, x + lastW, y, 
-                       xOffset, yOffset, width, height)
+                       xOffset, yOffset, width, height,
+                       drawable)
         lastW += w
 
 def getVertSpacing(numLines, margin, height, yOffset):

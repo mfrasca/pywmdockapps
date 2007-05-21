@@ -9,4 +9,4 @@ help(wmdocklib.<name>)
 from pywmgeneral import *
 from pywmhelpers import *
 
-__all__ = []
+__all__ = ['wmoo']

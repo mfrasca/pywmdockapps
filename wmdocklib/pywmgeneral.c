@@ -30,6 +30,7 @@
 */
 
 #include <Python.h>
+#include "structmember.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -254,9 +255,154 @@ static PyMethodDef PyWmgeneralMethods[] = {
     {NULL, NULL, 0, NULL}
 };
 
-void initpywmgeneral(void) {
-    Py_InitModule("pywmgeneral", PyWmgeneralMethods);
+typedef struct {
+    PyObject_HEAD
+    /* Type-specific fields go here. */
+    int has_drawable;
+    Pixmap drawable;
+    int width, height;
+} drawable_DrawableObject;
+
+static PyObject *
+Drawable_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
+{
+  drawable_DrawableObject *self;
+
+  self = (drawable_DrawableObject *)type->tp_alloc(type, 0);
+  if (self != NULL) {
+      self->has_drawable = 0;
+      self->width = 0;
+      self->height = 0;
+  }
+  
+  return (PyObject *)self;
 }
+
+static int
+Drawable_init(drawable_DrawableObject *self, PyObject *args, PyObject *kwds)
+{
+    unsigned int w, h;
+    if (! PyArg_ParseTuple(args, "ii", &w, &h))
+        return -1; 
+    if (!wmgen.attributes.depth) {
+        PyErr_SetString(PyExc_RuntimeError, "X client must be initialized first.");
+        return -1;
+    }
+
+    if (self->has_drawable)
+        XFreePixmap(display, self->drawable);
+    self->has_drawable = 1;
+    self->width = w;
+    self->height = h;
+    self->drawable = XCreatePixmap(display, wmgen.pixmap, 
+                                   w, h, wmgen.attributes.depth);
+
+    return 0;
+}
+
+static void
+Drawable_dealloc(drawable_DrawableObject *self)
+{
+    if (self->has_drawable)
+        XFreePixmap(display, self->drawable);
+}
+
+static PyObject *
+Drawable_xCopyAreaToWindow(drawable_DrawableObject *self, PyObject *args, PyObject *kwds)
+{
+    unsigned int src_x, src_y, width, height, dst_x, dst_y;
+    if (! PyArg_ParseTuple(args, "iiiiii", &src_x, &src_y, &width, &height, &dst_x, &dst_y))
+        return NULL; 
+
+    XCopyArea(display, self->drawable, wmgen.pixmap, NormalGC,
+              src_x, src_y, width, height, dst_x, dst_y);
+
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+static PyObject *
+Drawable_xClear(drawable_DrawableObject *self, PyObject *args, PyObject *kwds)
+{
+    XFillRectangle(display, self->drawable, NormalGC, 
+                   0, 0, self->width, self->height);
+
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+static PyObject *
+Drawable_xCopyAreaFromWindow(drawable_DrawableObject *self, PyObject *args, PyObject *kwds)
+{
+    unsigned int src_x, src_y, width, height, dst_x, dst_y;
+    if (! PyArg_ParseTuple(args, "iiiiii", &src_x, &src_y, &width, &height, &dst_x, &dst_y))
+        return NULL; 
+
+    XCopyArea(display, wmgen.pixmap, self->drawable, NormalGC,
+              src_x, src_y, width, height, dst_x, dst_y);
+
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+static PyMemberDef Drawable_members[] = {
+    {NULL}  /* Sentinel */
+};
+
+static PyMethodDef Drawable_methods[] = {
+    {"xCopyAreaFromWindow", (PyCFunction)Drawable_xCopyAreaFromWindow, METH_VARARGS,
+     "copy from the drawable to the global pixmap"
+    },
+    {"xCopyAreaToWindow", (PyCFunction)Drawable_xCopyAreaToWindow, METH_VARARGS,
+     "copy from the global pixmap into the drawable"
+    },
+    {"xClear", (PyCFunction)Drawable_xClear, METH_NOARGS,
+     "clears the pixmap"
+    },
+    {NULL}  /* Sentinel */
+};
+
+static PyTypeObject drawable_DrawableType = {
+    PyObject_HEAD_INIT(NULL)
+    0,                         /*ob_size*/
+    "pyywmgeneral.Drawable",             /*tp_name*/
+    sizeof(drawable_DrawableObject),             /*tp_basicsize*/
+    0,                         /*tp_itemsize*/
+    (destructor)Drawable_dealloc, /*tp_dealloc*/
+    0,                         /*tp_print*/
+    0,                         /*tp_getattr*/
+    0,                         /*tp_setattr*/
+    0,                         /*tp_compare*/
+    0,                         /*tp_repr*/
+    0,                         /*tp_as_number*/
+    0,                         /*tp_as_sequence*/
+    0,                         /*tp_as_mapping*/
+    0,                         /*tp_hash */
+    0,                         /*tp_call*/
+    0,                         /*tp_str*/
+    0,                         /*tp_getattro*/
+    0,                         /*tp_setattro*/
+    0,                         /*tp_as_buffer*/
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /*tp_flags*/
+    "Drawable objects",           /* tp_doc */
+    0,		               /* tp_traverse */
+    0,		               /* tp_clear */
+    0,		               /* tp_richcompare */
+    0,		               /* tp_weaklistoffset */
+    0,		               /* tp_iter */
+    0,		               /* tp_iternext */
+    Drawable_methods,             /* tp_methods */
+    Drawable_members,             /* tp_members */
+    0,                         /* tp_getset */
+    0,                         /* tp_base */
+    0,                         /* tp_dict */
+    0,                         /* tp_descr_get */
+    0,                         /* tp_descr_set */
+    0,                         /* tp_dictoffset */
+    (initproc)Drawable_init,      /* tp_init */
+    0,                         /* tp_alloc */
+    Drawable_new,                 /* tp_new */
+};
 
 /*****************************************************************************/
 /* Original C sources (With some modifications)                              */
@@ -299,6 +445,7 @@ static void GetXPM(XpmIcon *wmgen, char *pixmap_bytes[]) {
     XGetWindowAttributes(display, Root, &attributes);
 
     wmgen->attributes.valuemask |= (XpmReturnPixels | XpmReturnExtensions);
+    wmgen->attributes.depth = attributes.depth;
 
     err = XpmCreatePixmapFromData(display, Root, pixmap_bytes, &(wmgen->pixmap),
                     &(wmgen->mask), &(wmgen->attributes));
@@ -638,4 +785,25 @@ void openXwindow(int argc, char *argv[], char *pixmap_bytes[], char *pixmask_bit
         }
         XMoveWindow(display, win, wx, wy);
     }
+}
+
+#ifndef PyMODINIT_FUNC	/* declarations for DLL import/export */
+#define PyMODINIT_FUNC void
+#endif
+
+PyMODINIT_FUNC
+initpywmgeneral(void) {
+    PyObject* m;
+  
+    drawable_DrawableType.tp_new = PyType_GenericNew;
+    if (PyType_Ready(&drawable_DrawableType) < 0)
+        return;
+  
+    m = Py_InitModule3("pywmgeneral", PyWmgeneralMethods,
+                       "base C module for wmdocklib");
+    if (m == NULL)
+        return;
+
+    Py_INCREF(&drawable_DrawableType);
+    PyModule_AddObject(m, "Drawable", (PyObject *)&drawable_DrawableType);
 }

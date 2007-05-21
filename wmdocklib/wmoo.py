@@ -14,8 +14,10 @@ class Application:
           'area': if the pointer is here, the event is considered,
         
         """
+        self._elements = {}
         self._events = []
         self._sleep = 0.1
+        self._cycle = 0
         self._offset_x = self._offset_y = 3
 
         self._char_width, self._char_height = pywmhelpers.initPixmap(*args, **kwargs)
@@ -31,7 +33,48 @@ class Application:
         pywmhelpers.copyXPMArea(sourceX, sourceY+64, width, height,
                                 targetX, targetY)
 
+    def addLabel(self, labelId, orig, size=None, text=None):
+        """a label is a tuple with a
+        text: string; mutable
+        viewport: (orig: int, int, size: int, int); inmutable
+        pixmap: drawable; not user mutable, large enough to contain the text
+
+        if size is not given, it is inferred from text.
+        """
+        if size is None:
+            size = (self._char_width * len(text), self._char_height)
+        pixmapwidth = self._char_width * len(text)
+        import pywmgeneral
+        labelPixmap = pywmgeneral.Drawable(pixmapwidth, self._char_height)
+        self._elements[labelId] = [orig, size, pixmapwidth, 0, labelPixmap]
+        self.setLabelText(labelId, text)
+
+    def setLabelText(self, labelId, text):
+        """updates the drawable associated with labelId
+        """
+        (orig_x,orig_y), (size_x, size_y), width, offset, pixmap = self._elements[labelId]
+        newwidth = self._char_width * len(text)
+        if newwidth > width:
+            import pywmgeneral
+            pixmap = pywmgeneral.Drawable(newwidth, self._char_height)
+            self._elements[labelId][4] = pixmap
+        self._elements[labelId][2] = newwidth
+        self._elements[labelId][3] = 0
+        pixmap.xClear()
+        pywmhelpers.addString(text, 0, 0, drawable=pixmap)
+        pixmap.xCopyAreaToWindow(0, 0, size_x, size_y, orig_x, orig_y)
+    
     def update(self):
+        for labelId in self._elements:
+            (orig_x,orig_y), (size_x, size_y), width, offset, pixmap = self._elements[labelId]
+            if size_x < width:
+                pixmap.xCopyAreaToWindow(offset, 0, size_x, size_y, orig_x, orig_y)
+                if offset == width:
+                    offset = -size_x
+                else:
+                    offset += 1
+                self._elements[labelId][3] = offset
+                
         pass
 
     def redraw(self):
