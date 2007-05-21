@@ -15,15 +15,23 @@ devnull = file('/dev/null')
 
 class Application(wmoo.Application):
 
-    def __init__(self, *args, **kwargs):
-        wmoo.Application.__init__(self, *args, **kwargs)
+    def reset(self):
+        self._cacheLevel = -50
         self.child = None
         self._paused = None
+        self._buffering = 0
+        self._flash = 0
+        self._muting = 0
+        self.showCacheLevel()
+
+    def __init__(self, *args, **kwargs):
+        wmoo.Application.__init__(self, *args, **kwargs)
         self.radioList = []
         self.currentRadio = 0
         self._count = 0
-        self._cacheLevel = -50
-        self._buffering = 0
+        self._expectdying = 0
+
+        self.reset()
 
         self._buffered = ''
         import re
@@ -39,23 +47,23 @@ class Application(wmoo.Application):
         for i in t.split(u'\n'):
             radiodef = i.split('\t')
             radioname = radiodef[0].lower()
-            if len(radiodef) == 1:
+            if len(radiodef) != 3 or i[0] == '#':
                 continue
             if radioname == '':
                 globals()[radiodef[1]] = radiodef[2]
                 pass
             else:
                 self.radioList.append( (radioname+' '*24, radiodef[1], radiodef[2]) )
-
-    def reset(self):
-        self._cacheLevel = -50
-        self.child = None
-        self._paused = None
-        self.showCacheLevel()
         
 
     def handler(self, num, frame):
-        self.reset()
+        if self._expectdying:
+            print self._expectdying
+            self._expectdying -= 1
+        else:
+            self.reset()
+            self._flash = 4
+            self._colour = 1
 
     def startPlayer(self):
         import os, subprocess, signal
@@ -68,6 +76,7 @@ class Application(wmoo.Application):
                                       stdout=subprocess.PIPE,
                                       stderr=devnull)
         signal.signal(signal.SIGCHLD, self.handler)
+        self._flash = 0
         self._paused = False
         self._buffered = ''
         self._buffering = 1
@@ -75,19 +84,21 @@ class Application(wmoo.Application):
         import fcntl
 	flags = fcntl.fcntl(self.child.stdout, fcntl.F_GETFL)
     	fcntl.fcntl(self.child.stdout, fcntl.F_SETFL, flags | os.O_NONBLOCK)
+	flags = fcntl.fcntl(self.child.stdin, fcntl.F_GETFL)
+    	fcntl.fcntl(self.child.stdin, fcntl.F_SETFL, flags | os.O_NONBLOCK)
 
     def stopPlayer(self):
         if self.child:
-            if self._buffering != 1:
-                self.child.stdin.write('q')
-            import os, signal
-            os.kill(self.child.pid, signal.SIGKILL)
-            return True
-        return False
+            print self._expectdying
+            self.child.stdin.write('q')
+            self._expectdying += 1
+            self.child = None
 
-    def quitProgram(self, event):
-        self.stopPlayer()
-        sys.exit(0)
+    def muteStream(self, event):
+        if self.child and self._buffering == 0:
+            self.child.stdin.write('m')
+            self.putPattern(9*self._muting, 0, 9, 11, 30, 29)
+            self._muting = 1 - self._muting
 
     def printevent(self, event):
         print event
@@ -96,14 +107,16 @@ class Application(wmoo.Application):
         if self.currentRadio == 0: self.currentRadio = len(self.radioList)
         self.currentRadio -= 1
         self.putString(0, 10, self.radioList[self.currentRadio][0])
-        if self.stopPlayer(): 
+        if self.child:
+            self.stopPlayer()
             self.startPlayer()
 
     def nextRadio(self, event):
         self.currentRadio += 1
         if self.currentRadio == len(self.radioList): self.currentRadio = 0
         self.putString(0, 10, self.radioList[self.currentRadio][0])
-        if self.stopPlayer(): 
+        if self.child:
+            self.stopPlayer()
             self.startPlayer()
 
     def playStream(self, event):
@@ -114,7 +127,7 @@ class Application(wmoo.Application):
         self.reset()
 
     def pauseStream(self, event):
-        if self.child:
+        if self.child and not self._buffering:
             self.child.stdin.write(' ')
             self._paused = not self._paused
             if self._paused:
@@ -133,12 +146,13 @@ class Application(wmoo.Application):
                 else:
                     self.putPattern(54, 0, 3, 1, 52, 54-i)
         else:
-            if self._paused:
+            if self._paused or self._flash:
                 colour = self._colour = 3 - self._colour
+                self._flash = max(0, self._flash - 1)
             else:
                 colour = 2
             for i in range(-1, 25):
-                if i*4 < self._cacheLevel:
+                if (i*4 < self._cacheLevel) or self._flash:
                     self.putPattern(54, colour, 3, 1, 52, 54-i)
                 else:
                     self.putPattern(54, 0, 3, 1, 52, 54-i)
@@ -168,11 +182,8 @@ class Application(wmoo.Application):
                             self._cacheLevel = float(match.group(1))
 
                     self._buffered = self._buffered[rpos:]
+        if self.child or self._flash:
             self.showCacheLevel()
-
-def handler(num, frame):
-    hdmon.updateMonitoredPaths()
-    signal.alarm(10)
 
 palette = {
     '-': "#000000",
@@ -215,12 +226,12 @@ background = [
     "                                                   XXXX.        ",
     "      XXXXXXXX.   XXXXXXXX.   XXXXXXXX.            X---         ",
     "      X--------   X--------   X--------            X---         ",
-    "      X--------   X--------   X--------            X---         ",
-    "      X--o--o--   X--o--o--   X-o.-.o--            X---         ",
-    "      X--o-oo--   X--oo-o--   X-.o.o.--            X---         ",
-    "      X--oooo--   X--oooo--   X--.o. --            X---         ",
-    "      X--o-oo--   X--oo-o--   X-.o.o.--            X---         ",
-    "      X--o--o--   X--o--o--   X-o.-.o--            X---         ",
+    "      X--------   X--------   X-----o--            X---         ",
+    "      X--o--o--   X--o--o--   X----oo--            X---         ",
+    "      X--o-oo--   X--oo-o--   X-ooooo--            X---         ",
+    "      X--oooo--   X--oooo--   X-ooooo--            X---         ",
+    "      X--o-oo--   X--oo-o--   X----oo--            X---         ",
+    "      X--o--o--   X--o--o--   X-----o--            X---         ",
     "      X--------   X--------   X--------            X---         ",
     "      X--------   X--------   X--------            X---         ",
     "      .--------   .--------   .--------            X---         ",
@@ -253,13 +264,13 @@ background = [
 patterns = [
     "XXXXXXXX.XXXXXXXX.XXXXXXXX.XXXXXXXX.XXXXXXXX.XXXXXXXX.---       ",
     "X--------X--------X--------X--------X--------X--------rrr       ",
-    "X--------X--------X--------X--------X--------X--------iii       ",
-    "X-rrrrr--X-ooooo--X-rr-rr--X-oo-oo--X--o-----X--r-----          ",
-    "X-rrrrr--X-ooooo--X-rr-rr--X-oo-oo--X--oo----X--rr----          ",
-    "X-rrrrr--X-ooooo--X-rr-rr--X-oo-oo--X--ooo---X--rrr---          ",
-    "X-rrrrr--X-ooooo--X-rr-rr--X-oo-oo--X--oo----X--rr----          ",
-    "X-rrrrr--X-ooooo--X-rr-rr--X-oo-oo--X--o-----X--r-----          ",
-    "X--------X--------X--------X--------X--------X--------          ",
+    "X-----rr-X-----o--X-----o--X--------X--------X--------iii       ",
+    "X----rr--X----oo--X----oo--X-oo-oo--X--o-----X--r-----          ",
+    "X-oorro--X-ooooo--X-ooooo--X-oo-oo--X--oo----X--rr----          ",
+    "X-ooroo--X-ooooo--X-ooooo--X-oo-oo--X--ooo---X--rrr---          ",
+    "X--rroo--X----oo--X----oo--X-oo-oo--X--oo----X--rr----          ",
+    "X-rr--o--X-----o--X-----o--X-oo-oo--X--o-----X--r-----          ",
+    "X- ------X--------X--------X--------X--------X--------          ",
     "X--------X--------X--------X--------X--------X--------          ",
     ".--------.--------.--------.--------.--------.--------          ",
     ]
@@ -280,7 +291,7 @@ def main():
  
     app.addCallback(app.previousRadio, 'buttonrelease', area=( 6,29,15,38))
     app.addCallback(app.nextRadio,     'buttonrelease', area=(18,29,27,38))
-    app.addCallback(app.quitProgram,   'buttonrelease', area=(30,29,39,38), key=1)
+    app.addCallback(app.muteStream,    'buttonrelease', area=(30,29,39,38))
 
     app.addCallback(app.playStream, 'buttonrelease', area=( 6,43,15,52))
     app.addCallback(app.pauseStream, 'buttonrelease', area=(18,43,27,52))
