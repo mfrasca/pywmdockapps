@@ -182,12 +182,18 @@ pywmgeneral_copyXPMArea(PyObject *self, PyObject *args) {
 
 static PyObject *
 pywmgeneral_checkForEvents(PyObject *self, PyObject *args) {
-    /* If we find an event we handle, return a dicitionary containing some
+    /* If we find an event we handle, return a dictionary containing some
      * information about it. Return None if there are no events we handle.
      * Ignore events we don't handle. Also we provide a handler for when the
      * window is exposed, redraw it.
      */
     XEvent event;
+    static char buffer[8];
+    int bufsize = 8;
+    XComposeStatus dummy;
+    KeySym keysym;
+    int count;
+
     if (!PyArg_ParseTuple(args, ""))
         return NULL;
     while (XPending(display)) {
@@ -205,10 +211,14 @@ pywmgeneral_checkForEvents(PyObject *self, PyObject *args) {
           break; 
 
         case KeyPress:
-          return Py_BuildValue("{s:s,s:i,s:i}", 
-                               "type", "keypress",
-                               "state", event.xkey.state, 
-                               "keycode", event.xkey.keycode);
+            count = XLookupString((XKeyEvent*)&event, buffer, bufsize, &keysym, &dummy);
+            buffer[count] = '\0';
+            
+            return Py_BuildValue("{s:s,s:i,s:i,s:s}", 
+                                 "type", "keypress",
+                                 "state", event.xkey.state, 
+                                 "keycode", event.xkey.keycode,
+                                 "button", buffer);
 
         case ButtonPress:
         case ButtonRelease:
@@ -254,6 +264,11 @@ static PyMethodDef PyWmgeneralMethods[] = {
         "Check for some Xevents"},
     {NULL, NULL, 0, NULL}
 };
+
+/*
+ * here comes the definition of the class Drawable
+ *
+ */
 
 typedef struct {
     PyObject_HEAD
@@ -403,6 +418,11 @@ static PyTypeObject drawable_DrawableType = {
     0,                         /* tp_alloc */
     Drawable_new,                 /* tp_new */
 };
+
+/*
+ * end of class Dawable
+ *
+ */
 
 /*****************************************************************************/
 /* Original C sources (With some modifications)                              */

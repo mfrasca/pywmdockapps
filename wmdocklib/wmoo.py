@@ -150,7 +150,7 @@ class Application:
                 for evtype, key, area, callback in self._events:
                     if evtype is not None and evtype != event['type']: continue
                     if key is not None and key != event['button']: continue
-                    if area is not None:
+                    if area is not None and 'x' in event:
                         if not area[0] <= event['x'] <= area[2]: continue
                         if not area[1] <= event['y'] <= area[3]: continue
 
