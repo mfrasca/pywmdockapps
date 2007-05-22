@@ -58,7 +58,6 @@ class Application(wmoo.Application):
 
     def handler(self, num, frame):
         if self._expectdying:
-            print self._expectdying
             self._expectdying -= 1
         else:
             self.reset()
@@ -89,21 +88,15 @@ class Application(wmoo.Application):
 
     def stopPlayer(self):
         if self.child:
-            print self._expectdying
             self.child.stdin.write('q')
             self._expectdying += 1
             self.child = None
-
-    def muteStream(self, event):
-        if self.child and self._buffering == 0:
-            self.child.stdin.write('m')
-            self.putPattern(9*self._muting, 0, 9, 11, 30, 29)
-            self._muting = 1 - self._muting
 
     def printevent(self, event):
         print event
 
     def previousRadio(self, event):
+        print 'in previousRadio'
         if self.currentRadio == 0: self.currentRadio = len(self.radioList)
         self.currentRadio -= 1
         self.setLabelText('name', self.radioList[self.currentRadio][0])
@@ -112,6 +105,7 @@ class Application(wmoo.Application):
             self.startPlayer()
 
     def nextRadio(self, event):
+        print 'in nextRadio'
         self.currentRadio += 1
         if self.currentRadio == len(self.radioList): self.currentRadio = 0
         self.setLabelText('name', self.radioList[self.currentRadio][0])
@@ -120,13 +114,16 @@ class Application(wmoo.Application):
             self.startPlayer()
 
     def playStream(self, event):
+        print 'in playStream'
         self.startPlayer()
 
     def stopStream(self, event):
+        print 'in stopStream'
         self.stopPlayer()
         self.reset()
 
     def pauseStream(self, event):
+        print 'in pauseStream'
         if self.child and not self._buffering:
             self.child.stdin.write(' ')
             self._paused = not self._paused
@@ -135,6 +132,13 @@ class Application(wmoo.Application):
             return True
         return False
 
+    def muteStream(self, event):
+        print 'in muteStream'
+        if self.child and self._buffering == 0:
+            self.child.stdin.write('m')
+            self.setButtonPattern('mute', (33-11*self._muting, 0))
+            self._muting = 1 - self._muting
+
     def showCacheLevel(self):
         if self._buffering:
             self._cacheLevel += 1
@@ -142,9 +146,9 @@ class Application(wmoo.Application):
                 self._cacheLevel -= 25
             for i in range(-1, 25):
                 if abs(i - self._cacheLevel) <= 1:
-                    self.putPattern(54, self._buffering, 3, 1, 52, 54-i)
+                    self.putPattern(54, self._buffering, 5, 1, 54, 58-i)
                 else:
-                    self.putPattern(54, 0, 3, 1, 52, 54-i)
+                    self.putPattern(54, 0, 5, 1, 54, 58-i)
         else:
             if self._paused or self._flash:
                 colour = self._colour = 3 - self._colour
@@ -153,9 +157,9 @@ class Application(wmoo.Application):
                 colour = 2
             for i in range(-1, 25):
                 if (i*4 < self._cacheLevel) or self._flash:
-                    self.putPattern(54, colour, 3, 1, 52, 54-i)
+                    self.putPattern(54, colour, 5, 1, 54, 58-i)
                 else:
-                    self.putPattern(54, 0, 3, 1, 52, 54-i)
+                    self.putPattern(54, 0, 5, 1, 54, 58-i)
 
     def update(self):
         wmoo.Application.update(self)
@@ -206,55 +210,55 @@ background = [
     "                                                                ",
     "                                                                ",
     "                                                                ",
-    "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
-    "----------------------------------------------------------------",
-    "----------------------------------------------------------------",
-    "----------------------------------------------------------------",
-    "----------------------------------------------------------------",
-    "----------------------------------------------------------------",
-    "----------------------------------------------------------------",
-    "----------------------------------------------------------------",
-    "----------------------------------------------------------------",
-    "----------------------------------------------------------------",
-    "----------------------------------------------------------------",
-    "----------------------------------------------------------------",
-    "----------------------------------------------------------------",
-    "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
     "                                                                ",
     "                                                                ",
     "                                                                ",
     "                                                                ",
-    "                                                   XXXX.        ",
-    "      XXXXXXXX.   XXXXXXXX.   XXXXXXXX.            X---         ",
-    "      X--------   X--------   X--------            X---         ",
-    "      X--------   X--------   X-----o--            X---         ",
-    "      X--o--o--   X--o--o--   X----oo--            X---         ",
-    "      X--o-oo--   X--oo-o--   X-ooooo--            X---         ",
-    "      X--oooo--   X--oooo--   X-ooooo--            X---         ",
-    "      X--o-oo--   X--oo-o--   X----oo--            X---         ",
-    "      X--o--o--   X--o--o--   X-----o--            X---         ",
-    "      X--------   X--------   X--------            X---         ",
-    "      X--------   X--------   X--------            X---         ",
-    "      .--------   .--------   .--------            X---         ",
-    "                                                   X---         ",
-    "                                                   X---         ",
-    "                                                  X.---..       ",
-    "      XXXXXXXX.   XXXXXXXX.   XXXXXXXX.            X---         ",
-    "      X--------   X--------   X--------            X---         ",
-    "      X--------   X--------   X--------            X---         ",
-    "      X--o-----   X-oo-oo--   X-ooooo--            X---         ",
-    "      X--oo----   X-oo-oo--   X-ooooo--            X---         ",
-    "      X--ooo---   X-oo-oo--   X-ooooo--            X---         ",
-    "      X--oo----   X-oo-oo--   X-ooooo--            X---         ",
-    "      X--o-----   X-oo-oo--   X-ooooo--            X---         ",
-    "      X--------   X--------   X--------            X---         ",
-    "      X--------   X--------   X--------            X---         ",
-    "      .--------   .--------   .--------            X---         ",
-    "                                                   X---         ",
-    "                                                   .---         ",
+    "                                                                ",
+    "  XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX  ",
+    "  X----------------------------------------------------------X  ",
+    "  X----------------------------------------------------------X  ",
+    "  X----------------------------------------------------------X  ",
+    "  X----------------------------------------------------------X  ",
+    "  X----------------------------------------------------------X  ",
+    "  X----------------------------------------------------------X  ",
+    "  X----------------------------------------------------------X  ",
+    "  X----------------------------------------------------------X  ",
+    "  X----------------------------------------------------------X  ",
+    "  X----------------------------------------------------------X  ",
+    "  X----------------------------------------------------------X  ",
+    "  X----------------------------------------------------------X  ",
+    "  XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX  ",
     "                                                                ",
     "                                                                ",
-    "                                                                ",
+    "    ............    ............    ............     XXXXXX.    ",
+    "    ...........     ...........     ...........      X-----     ",
+    "    ...........     ...........     ...........      X-----     ",
+    "    ...........     ...........     ...........      X-----     ",
+    "    ...........     ...........     ...........      X-----     ",
+    "    ...........     ...........     ...........      X-----     ",
+    "    ...........     ...........     ...........      X-----     ",
+    "    ...........     ...........     ...........      X-----     ",
+    "    ...........     ...........     ...........      X-----     ",
+    "    ...........     ...........     ...........      X-----     ",
+    "    ...........     ...........     ...........      X-----     ",
+    "    ...........     ...........     ...........      X-----     ",
+    "                                                     X-----     ",
+    "                                                     X-----     ",
+    "                                                    X.-----..   ",
+    "                                                     X-----     ",
+    "    ............    ............    ............     X-----     ",
+    "    ...........     ...........     ...........      X-----     ",
+    "    ...........     ...........     ...........      X-----     ",
+    "    ...........     ...........     ...........      X-----     ",
+    "    ...........     ...........     ...........      X-----     ",
+    "    ...........     ...........     ...........      X-----     ",
+    "    ...........     ...........     ...........      X-----     ",
+    "    ...........     ...........     ...........      X-----     ",
+    "    ...........     ...........     ...........      X-----     ",
+    "    ...........     ...........     ...........      X-----     ",
+    "    ...........     ...........     ...........      X-----     ",
+    "    ...........     ...........     ...........      .-----     ",
     "                                                                ",
     "                                                                ",
     "                                                                ",
@@ -263,17 +267,30 @@ background = [
     ]
 
 patterns = [
-    "XXXXXXXX.XXXXXXXX.XXXXXXXX.XXXXXXXX.XXXXXXXX.XXXXXXXX.---       ",
-    "X--------X--------X--------X--------X--------X--------rrr       ",
-    "X-----rr-X-----o--X-----o--X--------X--------X--------iii       ",
-    "X----rr--X----oo--X----oo--X-oo-oo--X--o-----X--r-----          ",
-    "X-oorro--X-ooooo--X-ooooo--X-oo-oo--X--oo----X--rr----          ",
-    "X-ooroo--X-ooooo--X-ooooo--X-oo-oo--X--ooo---X--rrr---          ",
-    "X--rroo--X----oo--X----oo--X-oo-oo--X--oo----X--rr----          ",
-    "X-rr--o--X-----o--X-----o--X-oo-oo--X--o-----X--r-----          ",
-    "X- ------X--------X--------X--------X--------X--------          ",
-    "X--------X--------X--------X--------X--------X--------          ",
-    ".--------.--------.--------.--------.--------.--------          ",
+    "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX          -----     ",
+    "X----------X----------X----------X----------          rrrrr     ",
+    "X----------X----------X------oo--X------oor-          iiiii     ",
+    "X--o---o---X--o---o---X-----ooo--X-----oorr-                    ",
+    "X--o--oo---X--oo--o---X----oooo--X----oorr--                    ",
+    "X--o-ooo---X--ooo-o---X-ooXoooo--X-ooXorro--                    ",
+    "X--ooooo---X--ooooo---X-ooXoooo--X-ooXrroo--                    ",
+    "X--o-ooo---X--ooo-o---X-ooXoooo--X-oorrooo--                    ",
+    "X--o--oo---X--oo--o---X----oooo--X--rroooo--                    ",
+    "X--o---o---X--o---o---X-----ooo--X-rr--ooo--                    ",
+    "X----------X----------X------oo--X-r----oo--                    ",
+    ".----------.----------.----------X----------                    ",
+    "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX                               ",
+    "X----------X----------X----------                               ",
+    "X----------X----------X----------                               ",
+    "X--oo------X--oo-oo---X--oooooo--                               ",
+    "X--ooo-----X--oo-oo---X--oooooo--                               ",
+    "X--oooo----X--oo-oo---X--oooooo--                               ",
+    "X--ooooo---X--oo-oo---X--oooooo--                               ",
+    "X--oooo----X--oo-oo---X--oooooo--                               ",
+    "X--ooo-----X--oo-oo---X--oooooo--                               ",
+    "X--oo------X--oo-oo---X--oooooo--                               ",
+    "X----------X----------X----------                               ",
+    ".---------------------.----------                               ",
     ]
 
 
@@ -286,17 +303,16 @@ def main():
                       background = background,
                       patterns = patterns)
     # maxCharsPerLine = (width-2*xOffset) / char width
-    app.addLabel('name', (3, 13), (58, 10), app.radioList[app.currentRadio][0])
+    app.addLabel('name', (5, 18), (54, 10), app.radioList[app.currentRadio][0])
 
     # app.addCallback(printevent)
- 
-    app.addCallback(app.previousRadio, 'buttonrelease', area=( 6,29,15,38))
-    app.addCallback(app.nextRadio,     'buttonrelease', area=(18,29,27,38))
-    app.addCallback(app.muteStream,    'buttonrelease', area=(30,29,39,38))
+    app.addButton('prev',  ( 4,31), (11, 12), app.previousRadio, pattern=(0,0))
+    app.addButton('next',  (20,31), (11, 12), app.nextRadio, pattern=(11,0))
+    app.addButton('mute',  (36,31), (11, 12), app.muteStream, pattern=(22,0))
 
-    app.addCallback(app.playStream, 'buttonrelease', area=( 6,43,15,52))
-    app.addCallback(app.pauseStream, 'buttonrelease', area=(18,43,27,52))
-    app.addCallback(app.stopStream, 'buttonrelease', area=(30,43,39,52))
+    app.addButton('play',  ( 4,47), (11, 12), app.playStream, pattern=(0,12))
+    app.addButton('pause', (20,47), (11, 12), app.pauseStream, pattern=(11,12))
+    app.addButton('stop',  (36,47), (11, 12), app.stopStream, pattern=(22,12))
     
     app.run()
 

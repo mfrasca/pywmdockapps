@@ -15,6 +15,7 @@ class Application:
         
         """
         self._elements = {}
+        self._buttons = {}
         self._events = []
         self._sleep = 0.1
         self._cycle = 0
@@ -63,6 +64,35 @@ class Application:
         pixmap.xClear()
         pywmhelpers.addString(text, 0, 0, drawable=pixmap)
         pixmap.xCopyAreaToWindow(0, 0, size_x, size_y, orig_x, orig_y)
+
+    def addButton(self, buttonId, orig, size,
+                  callback1, callback2=None, callback3=None,
+                  pattern=None):
+        """adds an area sensitive to the click of the mouse buttons
+
+        the graphical appearance can be specified in the pattern or left as
+        in the background.  in both cases, it can later be modified by
+        calling setButtonPattern
+        """
+
+        orig_x, orig_y = orig
+        dx, dy = size
+        area = (orig_x, orig_y, orig_x + dx, orig_y + dy)
+        self.addCallback(callback1, 'buttonrelease', area=area)
+        if callback2 is not None:
+            self.addCallback(callback2, 'buttonrelease', area=area)
+        if callback3 is not None:
+            self.addCallback(callback3, 'buttonrelease', area=area)
+        self._buttons[buttonId] = (orig, size)
+        if pattern is not None:
+            self.setButtonPattern(buttonId, pattern)
+
+    def setButtonPattern(self, buttonId, patternOrig):
+        """paints the pattern on top of the button
+        """
+
+        (x, y), (w, h) = self._buttons[buttonId]
+        pywmhelpers.copyXPMArea(patternOrig[0], patternOrig[1] + 64, w, h, x, y)
     
     def update(self):
         for labelId in self._elements:
