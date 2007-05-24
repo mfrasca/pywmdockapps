@@ -164,7 +164,6 @@ class Application(wmoo.Application):
                     self.putPattern(54, 0, 5, 1, 54, 58-i)
 
     def update(self):
-        wmoo.Application.update(self)
         self._count += 1
         if self._count <= 3:
             return

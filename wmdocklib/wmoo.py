@@ -3,6 +3,10 @@ import pywmhelpers
 
 debug = 0
 
+LEFT = 0
+CENTRE = 1
+RIGHT = 2
+
 class Application:
     def __init__(self, *args, **kwargs):
         """initializes the object
@@ -34,17 +38,18 @@ class Application:
         pywmhelpers.copyXPMArea(sourceX, sourceY+64, width, height,
                                 targetX, targetY)
 
-    def addLabel(self, labelId, orig, size=None, text=None):
+    def addLabel(self, labelId, orig, size=None, text='', align=LEFT):
         """a label is a tuple with a
         text: string; mutable
         viewport: (orig: int, int, size: int, int); inmutable
         pixmap: drawable; not user mutable, large enough to contain the text
+        align: one of LEFT, CENTRE, RIGHT
 
         if size is not given, it is inferred from text.
         """
         if size is None:
             size = (self._char_width * len(text), self._char_height)
-        pixmapwidth = self._char_width * len(text)
+        pixmapwidth = max(self._char_width * len(text), size[0])
         import pywmgeneral
         labelPixmap = pywmgeneral.Drawable(pixmapwidth, self._char_height)
         self._elements[labelId] = [orig, size, pixmapwidth, 0, labelPixmap]
@@ -95,6 +100,9 @@ class Application:
         pywmhelpers.copyXPMArea(patternOrig[0], patternOrig[1] + 64, w, h, x, y)
     
     def update(self):
+        pass
+
+    def redraw(self):
         for labelId in self._elements:
             (orig_x,orig_y), (size_x, size_y), width, offset, pixmap = self._elements[labelId]
             if size_x < width:
@@ -104,10 +112,6 @@ class Application:
                 else:
                     offset += 1
                 self._elements[labelId][3] = offset
-                
-        pass
-
-    def redraw(self):
         self.update()
         pywmhelpers.redraw()
 
