@@ -125,6 +125,7 @@ def addString(s, x, y, xOffset=0, yOffset=0, width=None, height=None, drawable=N
                        xOffset, yOffset, width, height,
                        drawable)
         lastW += w
+    return lastW
 
 def getVertSpacing(numLines, margin, height, yOffset):
     """Return the optimal spacing between a number of lines.

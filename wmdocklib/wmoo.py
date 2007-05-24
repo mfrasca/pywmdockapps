@@ -52,23 +52,41 @@ class Application:
         pixmapwidth = max(self._char_width * len(text), size[0])
         import pywmgeneral
         labelPixmap = pywmgeneral.Drawable(pixmapwidth, self._char_height)
-        self._elements[labelId] = [orig, size, pixmapwidth, 0, labelPixmap]
+        self._elements[labelId] = {
+            'orig': orig,
+            'size': size,
+            'pixw': pixmapwidth,
+            'offset': 0,
+            'pixmap': labelPixmap,
+            'align': align}
         self.setLabelText(labelId, text)
 
     def setLabelText(self, labelId, text):
         """updates the drawable associated with labelId
         """
-        (orig_x,orig_y), (size_x, size_y), width, offset, pixmap = self._elements[labelId]
+        lbl = self._elements[labelId]
+        (orig_x,orig_y) = lbl['orig']
+        (size_x, size_y) = lbl['size']
         newwidth = self._char_width * len(text)
-        if newwidth > width:
+        if newwidth > lbl['pixw']:
             import pywmgeneral
-            pixmap = pywmgeneral.Drawable(newwidth, self._char_height)
-            self._elements[labelId][4] = pixmap
-        self._elements[labelId][2] = newwidth
-        self._elements[labelId][3] = 0
-        pixmap.xClear()
-        pywmhelpers.addString(text, 0, 0, drawable=pixmap)
-        pixmap.xCopyAreaToWindow(0, 0, size_x, size_y, orig_x, orig_y)
+            lbl['pixmap'] = pywmgeneral.Drawable(newwidth, self._char_height)
+        lbl['pixw'] = newwidth
+        lbl['offset'] = 0
+        lbl['pixmap'].xClear()
+        lbl['pixmap'].xCopyAreaToWindow(0, 0, size_x, size_y, orig_x, orig_y)
+        w = pywmhelpers.addString(text, 0, 0, drawable=lbl['pixmap'])
+        dx = 0
+        if w < size_x:
+            spare = size_x - w
+            if lbl['align'] == RIGHT:
+                dx = spare
+            elif lbl['align'] == CENTRE:
+                dx = int(spare/2)
+        else:
+            w = size_x
+            
+        lbl['pixmap'].xCopyAreaToWindow(0, 0, w, size_y, orig_x+dx, orig_y)
 
     def addButton(self, buttonId, orig, size,
                   callback1, callback2=None, callback3=None,
@@ -103,15 +121,15 @@ class Application:
         pass
 
     def redraw(self):
-        for labelId in self._elements:
-            (orig_x,orig_y), (size_x, size_y), width, offset, pixmap = self._elements[labelId]
-            if size_x < width:
-                pixmap.xCopyAreaToWindow(offset, 0, size_x, size_y, orig_x, orig_y)
-                if offset == width:
-                    offset = -size_x
+        for lbl in self._elements.values():
+            (orig_x,orig_y) = lbl['orig']
+            (size_x, size_y) = lbl['size']
+            if lbl['size'][0] < lbl['pixw']:
+                lbl['pixmap'].xCopyAreaToWindow(lbl['offset'], 0, size_x, size_y, orig_x, orig_y)
+                if lbl['offset'] == lbl['pixw']:
+                    lbl['offset'] = -size_x
                 else:
-                    offset += 1
-                self._elements[labelId][3] = offset
+                    lbl['offset'] += 1
         self.update()
         pywmhelpers.redraw()
 

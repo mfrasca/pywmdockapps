@@ -114,17 +114,18 @@ class Application(wmoo.Application):
                                   bg=0, fg=2, palette=palette,
                                   background=background,
                                   debug=options.debug)
+        
 
         if options.antialiased:
-            self.addLabel('date', orig=(5,24), size=(54,10), align=wmoo.CENTRE)
-            self.addLabel('day', orig=(5,36), size=(54,10), align=wmoo.CENTRE)
-            self.addLabel('week', orig=(5,48), size=(54,10), align=wmoo.CENTRE)
+            self.addLabel('date', orig=(4,24), size=(54,10), align=wmoo.CENTRE)
+            self.addLabel('day', orig=(4,36), size=(54,10), align=wmoo.CENTRE)
+            self.addLabel('week', orig=(4,48), size=(54,10), align=wmoo.CENTRE)
         else:
-            self.addLabel('time', orig=(5, 5), size=(54,10), align=wmoo.CENTRE)
-            self.addLabel('time2', orig=(5,16), size=(54,10), align=wmoo.CENTRE)
-            self.addLabel('date', orig=(5,27), size=(54,10), align=wmoo.CENTRE)
-            self.addLabel('day', orig=(5,38), size=(54,10), align=wmoo.CENTRE)
-            self.addLabel('week', orig=(5,49), size=(54,10), align=wmoo.CENTRE)
+            self.addLabel('time', orig=(4, 5), size=(54,10), align=wmoo.CENTRE)
+            self.addLabel('time2', orig=(4,16), size=(54,10), align=wmoo.CENTRE)
+            self.addLabel('date', orig=(4,27), size=(54,10), align=wmoo.CENTRE)
+            self.addLabel('day', orig=(4,38), size=(54,10), align=wmoo.CENTRE)
+            self.addLabel('week', orig=(4,49), size=(54,10), align=wmoo.CENTRE)
 
         self.timeFmt = options.timeformat
         self.dateFmt = options.dateformat
