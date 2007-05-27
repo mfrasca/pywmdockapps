@@ -1,5 +1,5 @@
 /* XPM */
-static char * 6x8_xpm[] = {
+static char * _x_[] = {
 "192 88 2 1",
 " 	c #000000",
 "+	c #FFFFFF",
