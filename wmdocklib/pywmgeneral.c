@@ -420,7 +420,7 @@ static PyTypeObject drawable_DrawableType = {
 };
 
 /*
- * end of class Dawable
+ * end of class Drawable
  *
  */
 
