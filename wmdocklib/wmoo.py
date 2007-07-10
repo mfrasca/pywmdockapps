@@ -7,6 +7,131 @@ LEFT = 0
 CENTRE = 1
 RIGHT = 2
 
+class Widget:
+    """
+    a widget is a graphical object able to display itself.
+
+    a wiget stores its graphical representation in a Drawable.  it gets the
+    chance to update its Drawable periodically, since the application will
+    scan all its widgets and call their 'update' method.
+
+    a callback can be associated to a widget during its creation.  all that
+    happens behind the scenes is that the callback is registered on the area
+    of the widget, but it is not really directly associated to it.
+    """
+    def __init__(self):
+        '''do not call ancestor constructor in derived classes!'''
+        raise NotImplementedError('Widget is not instantiable')
+    def update(self):
+        pass
+    pass
+
+class Label(Widget):
+        
+    def __init__(self, container, orig, size=None, text='', align=LEFT):
+        """a label is a tuple with...
+        text: string; mutable
+        viewport: (orig: int, int, size: int, int); inmutable
+        pixmap: drawable; not user mutable, large enough to contain the text
+        align: one of LEFT, CENTRE, RIGHT
+
+        if size is not given, it is inferred from text.
+        """
+        # print container, orig, size, text, align
+        if size is None:
+            size = (container._char_width * len(text), container._char_height)
+        pixmapwidth = max(container._char_width * len(text), size[0])
+        import pywmgeneral
+        labelPixmap = pywmgeneral.Drawable(pixmapwidth, container._char_height)
+        self.orig = orig
+        self.size = size
+        self.pixw = pixmapwidth
+        self.offset = 0
+        self.pixmap = labelPixmap
+        self.align = align
+        self.container = container
+        self.setText(text)
+
+    def update(self):
+        (orig_x,orig_y) = self.orig
+        (size_x, size_y) = self.size
+        if self.size[0] < self.pixw:
+            self.pixmap.xCopyAreaToWindow(self.offset, 0, size_x, size_y, orig_x, orig_y)
+            if self.offset == self.pixw:
+                self.offset = -size_x
+            else:
+                self.offset += 1
+
+    def setText(self, text):
+        (orig_x,orig_y) = self.orig
+        (size_x, size_y) = self.size
+        newwidth = self.container._char_width * len(text)
+        if newwidth > self.pixw:
+            import pywmgeneral
+            self.pixmap = pywmgeneral.Drawable(newwidth, self.container._char_height)
+        self.pixw = newwidth
+        self.offset = 0
+        self.pixmap.xClear()
+        self.pixmap.xCopyAreaToWindow(0, 0, size_x, size_y, orig_x, orig_y)
+        w = pywmhelpers.addString(text, 0, 0, drawable=self.pixmap)
+        dx = 0
+        if w < size_x:
+            spare = size_x - w
+            if self.align == RIGHT:
+                dx = spare
+            elif self.align == CENTRE:
+                dx = int(spare/2)
+        else:
+            w = size_x
+        self.pixmap.xCopyAreaToWindow(0, 0, w, size_y, orig_x+dx, orig_y)
+
+class Button(Widget):
+
+    def __init__(self, container, orig, size,
+                  callback1, callback2=None, callback3=None,
+                  pattern=None):
+        """adds an area sensitive to the click of the mouse buttons
+
+        the graphical appearance can be specified in the pattern or left as
+        in the background.  in both cases, it can later be modified by
+        calling setButtonPattern
+        """
+        # print container, orig, size, callback1, callback2, callback3, pattern
+
+        orig_x, orig_y = orig
+        dx, dy = size
+        area = (orig_x, orig_y, orig_x + dx, orig_y + dy)
+        container.addCallback(callback1, 'buttonrelease', area=area)
+        if callback2 is not None:
+            container.addCallback(callback2, 'buttonrelease', area=area)
+        if callback3 is not None:
+            container.addCallback(callback3, 'buttonrelease', area=area)
+        self.area = (orig_x, orig_y, dx, dy)
+        if pattern is not None:
+            self.setPattern(pattern)
+
+    def setPattern(self, patternOrig):
+        """paints the pattern on top of the button
+        """
+
+        (x, y, w, h) = self.area
+        pywmhelpers.copyXPMArea(patternOrig[0], patternOrig[1] + 64, w, h, x, y)
+    pass
+
+class ProgressBar(Widget):
+    """a bit more generic than a progress bar...
+
+    it shows as a progress bar, a percentage, an absolute quantity or a custom pixmap.
+
+    properties (all are mutable)
+    size: the total 'capacity'.
+    used: the amount completed.
+    style: one of [size, used, free, bar, percent, empty]
+    fg, bg: the colours for the bar.
+    
+    """
+    pass
+
 class Application:
     def __init__(self, *args, **kwargs):
         """initializes the object
@@ -18,8 +143,7 @@ class Application:
           'area': if the pointer is here, the event is considered,
         
         """
-        self._elements = {}
-        self._buttons = {}
+        self._widgets = {}
         self._events = []
         self._sleep = 0.1
         self._cycle = 0
@@ -38,98 +162,22 @@ class Application:
         pywmhelpers.copyXPMArea(sourceX, sourceY+64, width, height,
                                 targetX, targetY)
 
-    def addLabel(self, labelId, orig, size=None, text='', align=LEFT):
-        """a label is a tuple with a
-        text: string; mutable
-        viewport: (orig: int, int, size: int, int); inmutable
-        pixmap: drawable; not user mutable, large enough to contain the text
-        align: one of LEFT, CENTRE, RIGHT
+    def addWidget(self, widgetId, widgetClass, *args, **kwargs):
+        # print widgetId, widgetClass, args, kwargs
+        self._widgets[widgetId] = widgetClass(self, *args, **kwargs)
 
-        if size is not given, it is inferred from text.
-        """
-        if size is None:
-            size = (self._char_width * len(text), self._char_height)
-        pixmapwidth = max(self._char_width * len(text), size[0])
-        import pywmgeneral
-        labelPixmap = pywmgeneral.Drawable(pixmapwidth, self._char_height)
-        self._elements[labelId] = {
-            'orig': orig,
-            'size': size,
-            'pixw': pixmapwidth,
-            'offset': 0,
-            'pixmap': labelPixmap,
-            'align': align}
-        self.setLabelText(labelId, text)
+    def widget(self, name):
+        return self._widgets[name]
 
-    def setLabelText(self, labelId, text):
-        """updates the drawable associated with labelId
-        """
-        lbl = self._elements[labelId]
-        (orig_x,orig_y) = lbl['orig']
-        (size_x, size_y) = lbl['size']
-        newwidth = self._char_width * len(text)
-        if newwidth > lbl['pixw']:
-            import pywmgeneral
-            lbl['pixmap'] = pywmgeneral.Drawable(newwidth, self._char_height)
-        lbl['pixw'] = newwidth
-        lbl['offset'] = 0
-        lbl['pixmap'].xClear()
-        lbl['pixmap'].xCopyAreaToWindow(0, 0, size_x, size_y, orig_x, orig_y)
-        w = pywmhelpers.addString(text, 0, 0, drawable=lbl['pixmap'])
-        dx = 0
-        if w < size_x:
-            spare = size_x - w
-            if lbl['align'] == RIGHT:
-                dx = spare
-            elif lbl['align'] == CENTRE:
-                dx = int(spare/2)
-        else:
-            w = size_x
-            
-        lbl['pixmap'].xCopyAreaToWindow(0, 0, w, size_y, orig_x+dx, orig_y)
-
-    def addButton(self, buttonId, orig, size,
-                  callback1, callback2=None, callback3=None,
-                  pattern=None):
-        """adds an area sensitive to the click of the mouse buttons
-
-        the graphical appearance can be specified in the pattern or left as
-        in the background.  in both cases, it can later be modified by
-        calling setButtonPattern
-        """
-
-        orig_x, orig_y = orig
-        dx, dy = size
-        area = (orig_x, orig_y, orig_x + dx, orig_y + dy)
-        self.addCallback(callback1, 'buttonrelease', area=area)
-        if callback2 is not None:
-            self.addCallback(callback2, 'buttonrelease', area=area)
-        if callback3 is not None:
-            self.addCallback(callback3, 'buttonrelease', area=area)
-        self._buttons[buttonId] = (orig, size)
-        if pattern is not None:
-            self.setButtonPattern(buttonId, pattern)
-
-    def setButtonPattern(self, buttonId, patternOrig):
-        """paints the pattern on top of the button
-        """
-
-        (x, y), (w, h) = self._buttons[buttonId]
-        pywmhelpers.copyXPMArea(patternOrig[0], patternOrig[1] + 64, w, h, x, y)
+    def __getitem__(self, key):
+        return self._widgets[key]
     
     def update(self):
         pass
 
     def redraw(self):
-        for lbl in self._elements.values():
-            (orig_x,orig_y) = lbl['orig']
-            (size_x, size_y) = lbl['size']
-            if lbl['size'][0] < lbl['pixw']:
-                lbl['pixmap'].xCopyAreaToWindow(lbl['offset'], 0, size_x, size_y, orig_x, orig_y)
-                if lbl['offset'] == lbl['pixw']:
-                    lbl['offset'] = -size_x
-                else:
-                    lbl['offset'] += 1
+        for item in self._widgets.values():
+            item.update()
         self.update()
         pywmhelpers.redraw()
 

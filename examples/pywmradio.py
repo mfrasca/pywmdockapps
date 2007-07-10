@@ -22,8 +22,8 @@ class Application(wmoo.Application):
         self._buffering = 0
         self._flash = 0
         self._muting = 0
-        if 'pause' in self._buttons:
-            self.setButtonPattern('pause', (11, 10))
+        if 'pause' in self._widgets:
+            self['pause'].setPattern((11, 10))
         self.showCacheLevel()
 
     def __init__(self, *args, **kwargs):
@@ -101,7 +101,7 @@ class Application(wmoo.Application):
         #print 'in previousRadio'
         if self.currentRadio == 0: self.currentRadio = len(self.radioList)
         self.currentRadio -= 1
-        self.setLabelText('name', self.radioList[self.currentRadio][0])
+        self['name'].setText(self.radioList[self.currentRadio][0])
         if self.child:
             self.stopPlayer()
             self.startPlayer()
@@ -110,7 +110,7 @@ class Application(wmoo.Application):
         #print 'in nextRadio'
         self.currentRadio += 1
         if self.currentRadio == len(self.radioList): self.currentRadio = 0
-        self.setLabelText('name', self.radioList[self.currentRadio][0])
+        self['name'].setText(self.radioList[self.currentRadio][0])
         if self.child:
             self.stopPlayer()
             self.startPlayer()
@@ -138,7 +138,7 @@ class Application(wmoo.Application):
         #print 'in muteStream'
         if self.child and self._buffering == 0:
             self.child.stdin.write('m')
-            self.setButtonPattern('mute', (33-11*self._muting, 0))
+            self['mute'].setPattern((33-11*self._muting, 0))
             self._muting = 1 - self._muting
 
     def showCacheLevel(self):
@@ -169,7 +169,7 @@ class Application(wmoo.Application):
             return
         if self._paused:
             colour = self._colour = 4 - self._colour
-            self.setButtonPattern('pause', (self._colour*11, 10))
+            self['pause'].setPattern((self._colour*11, 10))
         self._count = 0
         if self.child:
             import select
@@ -303,15 +303,16 @@ def main():
                       background = background,
                       patterns = patterns)
     # maxCharsPerLine = (width-2*xOffset) / char width
-    app.addLabel('name',   (5, 16), (54, 10), app.radioList[app.currentRadio][0])
+    app.addWidget('name', wmoo.Label, 
+                  (5, 16), (54, 10), app.radioList[app.currentRadio][0])
 
-    app.addButton('prev',  ( 6,31), (9, 10), app.previousRadio, pattern=(0,0))
-    app.addButton('next',  (21,31), (9, 10), app.nextRadio, pattern=(11,0))
-    app.addButton('mute',  (36,31), (9, 10), app.muteStream, pattern=(22,0))
+    app.addWidget('prev', wmoo.Button, ( 6,31), (9, 10), app.previousRadio, pattern=(0,0))
+    app.addWidget('next', wmoo.Button, (21,31), (9, 10), app.nextRadio, pattern=(11,0))
+    app.addWidget('mute', wmoo.Button, (36,31), (9, 10), app.muteStream, pattern=(22,0))
 
-    app.addButton('play',  ( 6,47), (9, 10), app.playStream, pattern=(0,10))
-    app.addButton('pause', (21,47), (9, 10), app.pauseStream, pattern=(11,10))
-    app.addButton('stop',  (36,47), (9, 10), app.stopStream, pattern=(22,10))
+    app.addWidget('play', wmoo.Button, ( 6,47), (9, 10), app.playStream, pattern=(0,10))
+    app.addWidget('pause',wmoo.Button, (21,47), (9, 10), app.pauseStream, pattern=(11,10))
+    app.addWidget('stop', wmoo.Button, (36,47), (9, 10), app.stopStream, pattern=(22,10))
 
     app.addCallback(app.previousRadio, 'keypress', key='k')
     app.addCallback(app.nextRadio, 'keypress', key='j')
