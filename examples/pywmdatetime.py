@@ -117,15 +117,15 @@ class Application(wmoo.Application):
         
 
         if options.antialiased:
-            self.addLabel('date', orig=(4,24), size=(54,10), align=wmoo.CENTRE)
-            self.addLabel('day', orig=(4,36), size=(54,10), align=wmoo.CENTRE)
-            self.addLabel('week', orig=(4,48), size=(54,10), align=wmoo.CENTRE)
+            self.addWidget('date', wmoo.Label, orig=(4,24), size=(54,10), align=wmoo.CENTRE)
+            self.addWidget('day', wmoo.Label, orig=(4,36), size=(54,10), align=wmoo.CENTRE)
+            self.addWidget('week', wmoo.Label, orig=(4,48), size=(54,10), align=wmoo.CENTRE)
         else:
-            self.addLabel('time', orig=(4, 5), size=(54,10), align=wmoo.CENTRE)
-            self.addLabel('time2', orig=(4,16), size=(54,10), align=wmoo.CENTRE)
-            self.addLabel('date', orig=(4,27), size=(54,10), align=wmoo.CENTRE)
-            self.addLabel('day', orig=(4,38), size=(54,10), align=wmoo.CENTRE)
-            self.addLabel('week', orig=(4,49), size=(54,10), align=wmoo.CENTRE)
+            self.addWidget('time', wmoo.Label, orig=(4, 5), size=(54,10), align=wmoo.CENTRE)
+            self.addWidget('time2', wmoo.Label, orig=(4,16), size=(54,10), align=wmoo.CENTRE)
+            self.addWidget('date', wmoo.Label, orig=(4,27), size=(54,10), align=wmoo.CENTRE)
+            self.addWidget('day', wmoo.Label, orig=(4,38), size=(54,10), align=wmoo.CENTRE)
+            self.addWidget('week', wmoo.Label, orig=(4,49), size=(54,10), align=wmoo.CENTRE)
 
         self.timeFmt = options.timeformat
         self.dateFmt = options.dateformat
@@ -165,7 +165,7 @@ class Application(wmoo.Application):
                 self.putPattern(charX, 0, charW, 10, x, y)
                 x += charW
         else:
-            self.setLabelText('time', s)
+            self['time'].setText(s)
 
     def update(self):
         self.counter += 1
@@ -186,13 +186,13 @@ class Application(wmoo.Application):
             weekStr = time.strftime(newWeekFmt, lt)
             dayStr = time.strftime(self.dayFmt, lt)
             if self.lastStrs[1] != dateStr:
-                self.setLabelText('date', dateStr)
+                self['date'].setText(dateStr)
             self.lastStrs[1] = dateStr
             if self.lastStrs[2] != dayStr:
-                self.setLabelText('day', dayStr)
+                self['day'].setText(dayStr)
             self.lastStrs[2] = dayStr
             if self.lastStrs[3] != weekStr:
-                self.setLabelText('week', weekStr)
+                self['week'].setText(weekStr)
             self.lastStrs[3] = weekStr
 
 if __name__ == '__main__':
