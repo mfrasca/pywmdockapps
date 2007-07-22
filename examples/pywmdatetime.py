@@ -181,7 +181,7 @@ class Application(wmoo.Application):
             dateStr = time.strftime(self.dateFmt, lt)
             newWeekFmt = self.weekFmt
             if self.recalcWeek:
-                week = calculateWeek(lt)
+                week = self.calculateWeek(lt)
                 newWeekFmt = self.weekFmt.replace('%q', str(week))
             weekStr = time.strftime(newWeekFmt, lt)
             dayStr = time.strftime(self.dayFmt, lt)
