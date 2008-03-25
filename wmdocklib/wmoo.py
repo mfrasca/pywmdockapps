@@ -118,19 +118,57 @@ class Button(Widget):
         pywmhelpers.copyXPMArea(patternOrig[0], patternOrig[1] + 64, w, h, x, y)
     pass
 
+BOUNCE = 0
+BAR = 1
+TSIZE = 2
+TUSED = 3
+TFREE = 4
+TPERCENT = 5
+EMPTY = 6
+
+HORIZONTAL = 0
+VERTICAL = 1
+
 class ProgressBar(Widget):
     """a bit more generic than a progress bar...
 
-    it shows as a progress bar, a percentage, an absolute quantity or a custom pixmap.
+    it shows as a progress bar, a percentage, an absolute quantity or a
+    custom pixmap.
 
     properties (all are mutable)
-    size: the total 'capacity'.
-    used: the amount completed.
-    style: one of [size, used, free, bar, percent, empty]
+    capacity: defaults to 1
+    used: how much of capacity used.
+    style: one of [bar, bounce, (t-size, t-used, t-free, t-percent, empty)]
+    orientation: [horizontal, vertical]
     fg, bg: the colours for the bar.
     
     """
-    pass
+
+    def __init__(self, container, orig, size, style=BAR,
+                 orientation=HORIZONTAL):
+        pass
+
+    def showCacheLevel(self):
+        if self._buffering:
+            self._cacheLevel += 1
+            if self._cacheLevel >= 25:
+                self._cacheLevel -= 25
+            for i in range(-1, 25):
+                if abs(i - self._cacheLevel) <= 1:
+                    self.putPattern(54, self._buffering, 5, 1, 54, 51-i)
+                else:
+                    self.putPattern(54, 0, 5, 1, 54, 51-i)
+        else:
+            if self._flash:
+                colour = self._colour = 3 - self._colour
+                self._flash = max(0, self._flash - 1)
+            else:
+                colour = 2
+            for i in range(-1, 25):
+                if (i*4 < self._cacheLevel) or self._flash:
+                    self.putPattern(54, colour, 5, 1, 54, 51-i)
+                else:
+                    self.putPattern(54, 0, 5, 1, 54, 51-i)
 
 class Application:
     def __init__(self, *args, **kwargs):
