@@ -87,6 +87,7 @@ class Application(wmoo.Application):
         parser.add_option('-d', '--dateformat', default=dateDefaultFormat)
         parser.add_option('-y', '--weekdayformat', default=dayDefaultFormat)
         parser.add_option('-e', '--weekformat', default=weekDefaultFormat)
+        parser.add_option('--height', type='int', default=64)
         parser.add_option('-r', '--rgbfile')
         #parser.add_option('-c', '--configfile', default=defaultConfigFile)
         parser.add_option('--debug', action='store_true', default=False)
@@ -102,11 +103,13 @@ class Application(wmoo.Application):
         palette[0] = options.background
         palette[2] = options.foreground
 
+        self.hpad = hpad = (64 - options.height) / 2
+
         if options.antialiased:
-            background = [((6,3),(57,19)),
-                          ((3,22),(60,60))]
+            background = [((6,3+hpad),(57,19+hpad)),
+                          ((3,22+hpad),(60,60-hpad))]
         else:
-            background = [((3,3),(59,60))]
+            background = [((3,3+hpad),(59,60-hpad))]
 
         wmoo.Application.__init__(self,
                                   patterns=patterns,
@@ -117,15 +120,17 @@ class Application(wmoo.Application):
         
 
         if options.antialiased:
-            self.addWidget('date', wmoo.Label, orig=(4,24), size=(54,10), align=wmoo.CENTRE)
-            self.addWidget('day', wmoo.Label, orig=(4,36), size=(54,10), align=wmoo.CENTRE)
-            self.addWidget('week', wmoo.Label, orig=(4,48), size=(54,10), align=wmoo.CENTRE)
+            self.addWidget('date', wmoo.Label, orig=(4,24+hpad), size=(54,10), align=wmoo.CENTRE)
+            self.addWidget('day', wmoo.Label, orig=(4,36+hpad), size=(54,10), align=wmoo.CENTRE)
+            if 48+hpad <= 50:
+                self.addWidget('week', wmoo.Label, orig=(4,48), size=(54,10), align=wmoo.CENTRE)
         else:
-            self.addWidget('time', wmoo.Label, orig=(4, 5), size=(54,10), align=wmoo.CENTRE)
-            self.addWidget('time2', wmoo.Label, orig=(4,16), size=(54,10), align=wmoo.CENTRE)
-            self.addWidget('date', wmoo.Label, orig=(4,27), size=(54,10), align=wmoo.CENTRE)
-            self.addWidget('day', wmoo.Label, orig=(4,38), size=(54,10), align=wmoo.CENTRE)
-            self.addWidget('week', wmoo.Label, orig=(4,49), size=(54,10), align=wmoo.CENTRE)
+            self.addWidget('time', wmoo.Label, orig=(4, 5+hpad), size=(54,10), align=wmoo.CENTRE)
+            self.addWidget('time2', wmoo.Label, orig=(4,16+hpad), size=(54,10), align=wmoo.CENTRE)
+            self.addWidget('date', wmoo.Label, orig=(4,27+hpad), size=(54,10), align=wmoo.CENTRE)
+            self.addWidget('day', wmoo.Label, orig=(4,38+hpad), size=(54,10), align=wmoo.CENTRE)
+            if 49+hpad <= 50:
+                self.addWidget('week', wmoo.Label, orig=(4,49+hpad), size=(54,10), align=wmoo.CENTRE)
 
         self.timeFmt = options.timeformat
         self.dateFmt = options.dateformat
@@ -155,7 +160,7 @@ class Application(wmoo.Application):
 
     def updateTimeString(self, s):
         if self.antialiased:
-            x, y = 8, 6
+            x, y = 8, 6+self.hpad
             for c in s:
                 charW = 7
                 charX = (ord(c) - ord('0')) * 7
@@ -192,7 +197,8 @@ class Application(wmoo.Application):
                 self['day'].setText(dayStr)
             self.lastStrs[2] = dayStr
             if self.lastStrs[3] != weekStr:
-                self['week'].setText(weekStr)
+                if 'week' in self._widgets:
+                    self['week'].setText(weekStr)
             self.lastStrs[3] = weekStr
 
 if __name__ == '__main__':
