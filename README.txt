@@ -23,6 +23,5 @@ pywmgeneral.
 python ./setup install
 
 [CONTACT]
-Anything related to this piece of software can be e-mailed to me, Mario
-Frasca <mfrasca@interia.pl>.
+Anything related to this piece of software: please open an issue here.
 
